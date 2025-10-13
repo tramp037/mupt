@@ -69,6 +69,16 @@ class GMXsimple(pi.ProtocolBase):
                 write_log_file_body(self.logfile,log,cycle+1,rx_type)
                 
         return None
+    
+    def preprocess(self):
+        if not os.path.exists("processed_inputs.json"):
+            preprocessed_inputs_info=pi.PreprocessReactionInputs(**self.params,
+                                                                 out_itp_file_path="./topology",
+                                                                 out_gro_file_path="./gro-files").process_reaction_info()
+            self.set_preprocessed_inputs_info(preprocessed_inputs_info=preprocessed_inputs_info)
+ 
+        else:     
+            preprocessed_inputs_info=self.preprocessed_inputs_info
    
 def create_parser():
 	parser = argparse.ArgumentParser(prog = 'polyamide-kolev-2014', usage = '%(prog)s [-h for help]', \

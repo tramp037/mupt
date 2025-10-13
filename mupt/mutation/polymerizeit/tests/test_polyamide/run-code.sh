@@ -5,8 +5,9 @@ eval "$(conda shell.bash hook)"
 conda activate mupt
 
 rm -f sqlite_memdb.db
-cp ../../../../mudrivers/gromacs/tests/npt.gro gro-files/iter0.gro
-cp ../../../../mudrivers/gromacs/tests/topol.top topology/iter0.top
+
+cp ../../../../mudrivers/gromacs/tests/mpd-tmc/npt.gro gro-files/iter0.gro
+cp ../../../../mudrivers/gromacs/tests/mpd-tmc/topol.top topology/iter0.top
 
 python polyamide.py  -inputs_file inputs-pa.txt \
                      -preprocess_database init.db \

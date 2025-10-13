@@ -11,8 +11,8 @@ if __name__=="__main__":
 		
         args=create_parser().parse_args()
         param_args=vars(args)
-        run=GMXsimple(**param_args)
-        r_val = run.run(0,10)
+        process=GMXsimple(**param_args)
+        process.preprocess()
     except (RuntimeError, TypeError, NameError) as e:
        print(e)
        print("Something went wrong in checking the reactions")	
