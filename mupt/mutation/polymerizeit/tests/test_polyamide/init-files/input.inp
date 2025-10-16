@@ -1,7 +1,7 @@
 #Required inputs for .gro file creation
 
 ; box dimensions in nm
-box_dim               = 6.6,6.6,6.6
+box_dim               = 6.7,6.7,6.7
 
 ; molecule names and gro files
 molecule_name         = MPD,TMC
@@ -32,10 +32,10 @@ ensemble              = NVE,NVT,NPT
 #Required inputs for .top file creation
 
 ; force field file
-ff                    = ../topology/forcefield.itp
+ff                    = forcefield.itp
 
 ; molecule topology files
-molecule_topology     = ../topology/mpd_gmx.itp,../topology/tmc_gmx.itp
+molecule_topology     = mpd_gmx.itp,tmc_gmx.itp
 
 #---------------------------------------------------#
 #---------------------------------------------------#

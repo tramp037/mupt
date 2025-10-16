@@ -1,7 +1,18 @@
+#!/bin/bash
+source /usr/local/gromacs/bin/GMXRC
+
+eval "$(conda shell.bash hook)"
+conda activate mupt
+
+cp topology/forcefield.itp init-files/forcefield.itp
+cp topology/nonbond.itp init-files/nonbond.itp
+cp topology/bonded.itp init-files/bonded.itp
+cp topology/mpd_gmx.itp init-files/mpd_gmx.itp
+cp topology/tmc_gmx.itp init-files/tmc_gmx.itp
 cd init-files
 
 # generate input files
-python setup.py -i inputs.inp
+python setup.py -i input.inp
 
 # run energy minimization
 gmx grompp -f emin.mdp -c polymer.gro -p topol.top -o emin.tpr
