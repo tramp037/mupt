@@ -10,6 +10,7 @@ filenames = monomer_filenames + repeat_unit_filenames
 forcefield = ['forcefield.itp', 'nonbond.itp', 'bonded.itp']
 emin_file = 'emin.mdp'
 equil_file = 'equil.mdp'
+n_iterations = 10
 
 reactions = [['mpd','tmc','dim']]
 reaction_template_A = [['n','h','h']]
@@ -18,7 +19,6 @@ product_remove_atoms_A = [['h']]
 product_remove_atoms_B = [['cl']]
 reactive_groups = [[reaction_template_A[i], reaction_template_B[i], product_remove_atoms_A[i], product_remove_atoms_B[i]] for i in range(len(reactions))]
 distance_cutoff = 0.35
-n_iterations = 10
 
 input_name = 'input-pa.txt'
 
