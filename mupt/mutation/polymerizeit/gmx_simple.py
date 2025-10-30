@@ -18,10 +18,7 @@ class GMXsimple(pi.ProtocolBase):
         #Checking if the preprocessed inputs are available
         #If not, then create the file
         if not os.path.exists("processed_inputs.json"):
-            preprocessed_inputs_info=pi.PreprocessReactionInputs(**self.params,
-                                                                 out_itp_file_path="./topology",
-                                                                 out_gro_file_path="./gro-files").process_reaction_info()
-            self.set_preprocessed_inputs_info(preprocessed_inputs_info=preprocessed_inputs_info)
+            self.preprocess()
  
         else:     
             preprocessed_inputs_info=self.preprocessed_inputs_info 
@@ -32,10 +29,10 @@ class GMXsimple(pi.ProtocolBase):
 
             #Energy minimization and equilibrtion of structure for the current cycle
             #Uses MD engine files
-            if not os.path.exists("./emin/em-whole-iter%d.gro" % (cycle, )) or rewrite:
-                sp.call(['bash ./em.sh %d' % (cycle, )], shell = True)
+            if not os.path.exists("./emin/emin-whole-iter%d.gro" % (cycle, )) or rewrite:
+                sp.call(['bash ./emin.sh %d' % (cycle, )], shell = True)
 
-            if not os.path.exists("./equil/nvt-equil-iter%d.gro" % (cycle, )) or rewrite:
+            if not os.path.exists("./equil/equil-whole-iter%d.gro" % (cycle, )) or rewrite:
                 sp.call(['bash ./equil.sh %d' % (cycle, )], shell = True)
 
             log=""
@@ -43,7 +40,7 @@ class GMXsimple(pi.ProtocolBase):
 
             
             #Updating the iteration-specific file names in pre-processed info
-            preprocessed_inputs_info['ifgro']="./equil/nvt-equil-iter"+str(cycle)+".gro"
+            preprocessed_inputs_info['ifgro']="./equil/equil-iter"+str(cycle)+".gro"
             preprocessed_inputs_info['ofgro']="./gro-files/iter"+str(cycle+1)+".gro"
             preprocessed_inputs_info['iftop']="./topology/iter"+str(cycle)+".top"
             preprocessed_inputs_info['oftop']="./topology/iter"+str(cycle+1)+".top"
@@ -71,20 +68,17 @@ class GMXsimple(pi.ProtocolBase):
         return None
     
     def preprocess(self):
-        if not os.path.exists("processed_inputs.json"):
-            preprocessed_inputs_info=pi.PreprocessReactionInputs(**self.params,
-                                                                 out_itp_file_path="./topology",
-                                                                 out_gro_file_path="./gro-files").process_reaction_info()
-            self.set_preprocessed_inputs_info(preprocessed_inputs_info=preprocessed_inputs_info)
- 
-        else:     
-            preprocessed_inputs_info=self.preprocessed_inputs_info
+        preprocessed_inputs_info=pi.PreprocessReactionInputs(**self.params,
+                                                                out_itp_file_path="./topology",
+                                                                out_gro_file_path="./gro-files").process_reaction_info()
+        self.set_preprocessed_inputs_info(preprocessed_inputs_info=preprocessed_inputs_info)
    
 def create_parser():
-	parser = argparse.ArgumentParser(prog = 'polyamide-kolev-2014', usage = '%(prog)s [-h for help]', \
+	parser = argparse.ArgumentParser(prog = 'PolymerizeIt! preprocessing', usage = '%(prog)s [-h for help]', \
                                              description='Generate input files with unique atom IDs')
 	parser.add_argument('-preprocess_database', '--preprocess_database', help = 'Input self.preprocess_database file name file', default="init.db")
 	parser.add_argument('-main_database', '--main_database', help = 'Input self.preprocess_database file name file', default="main.db")
+	parser.add_argument('-preprocess_only', "--preprocess_only", help = "If true, only preprocess the inputs.", default = bool(False))
 	parser.add_argument('-inputs_file',"--inputs_file", help="Parameters needed for polymerization")
 	parser.add_argument('-iftop', help = 'Input .top/.itp file (Required).')
 	parser.add_argument('-ifgro', help = 'Input .gro file (Required).')

@@ -1,4 +1,129 @@
 import networkx as nx
+import os
+import shutil
+
+def make_pi(directory, molecules, filenames, forcefield, emin_file, equil_file, input_name, n_iterations, **kwargs):
+    try:
+        os.mkdir(directory)
+        print(f"Directory {directory} created.")
+    except FileExistsError:
+        print(f"Directory {directory} already exists, not overwriting.")
+    
+    # create gro-files and topology folders, etc.
+    try:
+        os.mkdir(os.path.join(directory, 'gro-files'))
+    except FileExistsError:
+        pass
+    
+    try:
+        os.mkdir(os.path.join(directory, 'init-files'))
+    except FileExistsError:
+        pass
+    try:
+        os.mkdir(os.path.join(directory, 'topology'))
+    except FileExistsError:
+        pass
+
+    print(f"Subdirectories gro-files, init-files, and topology created in {directory}.")
+
+    # create emin and equil folders
+    try:
+        os.mkdir(os.path.join(directory, 'emin'))
+    except FileExistsError:
+        pass
+    try:
+        os.mkdir(os.path.join(directory, 'equil'))
+    except FileExistsError:
+        pass
+
+    print(f"Subdirectories emin and equil created in {directory}.\n")
+
+    # copy gro and top files to appropriate folders
+    for i, mol in enumerate(molecules):
+        shutil.copy(filenames[i]+".gro", os.path.join(directory, 'gro-files', filenames[i]+".gro"))
+        shutil.copy(filenames[i]+".top", os.path.join(directory, 'gro-files', filenames[i]+".top"))
+        print(f"Copied {filenames[i]}.gro and {filenames[i]}.top for molecule {mol}.")
+
+    for itp_file in forcefield:
+        shutil.copy(itp_file, os.path.join(directory, 'topology', itp_file))
+    print(f"\nCopied forcefield files to topology folder.\n")
+
+    shutil.copy(emin_file, os.path.join(directory, 'emin', emin_file))
+    shutil.copy(equil_file, os.path.join(directory, 'equil', equil_file))
+    print(f"Copied {emin_file} to emin folder and {equil_file} to equil folder.\n")
+
+    # write emin and equil setup and run scripts
+    with open(os.path.join(directory, 'emin.sh'), 'w') as f:
+        f.write("#!/bin/bash\n\n")
+        f.write("cd emin\n")
+        f.write("gmx grompp -f emin.mdp -c ../gro-files/iter${1}.gro -p ../topology/iter${1}.top -po emin-iter${1}.mdp -o emin-iter${1}.tpr -maxwarn 1\n\n")
+        f.write("gmx mdrun -s emin-iter${1}.tpr -v -deffnm emin-iter${1} -ntmpi 1 -ntomp 1\n\n")
+        f.write("gmx trjconv -f emin-iter${1}.gro -s emin-iter${1}.tpr -o emin-whole-iter${1}.gro -pbc whole <<EOF\n0\nEOF\n")
+        f.write("rm -f \\#*\n")
+        f.write("cd ..\n")
+
+    with open(os.path.join(directory, 'equil.sh'), 'w') as f:
+        f.write("#!/bin/bash\n\n")
+        f.write("cd equil\n")
+        f.write("gmx grompp -f equil.mdp -c ../emin/emin-whole-iter${1}.gro -p ../topology/iter${1}.top -po equil-iter${1}.mdp -o equil-iter${1}.tpr -maxwarn 1\n\n")
+        f.write("gmx mdrun -s equil-iter${1}.tpr -v -deffnm equil-iter${1}  -ntomp 1 -ntmpi 1 -pin on\n\n")
+        f.write("gmx trjconv -f equil-iter${1}.xtc -s equil-iter${1}.tpr -o equil-whole-iter${1}.xtc -pbc whole <<EOF\n0\nEOF\n")
+        f.write("gmx trjconv -f equil-iter${1}.gro -s equil-iter${1}.tpr -o equil-whole-iter${1}.gro -pbc whole <<EOF\n0\nEOF\n\n")
+        f.write("rm -f \\#*\n")
+        f.write("cd ..\n")
+
+    with open(os.path.join(directory, 'copy_previous_iter_files.sh'), 'w') as f:
+        f.write("#!/bin/bash\n\n")
+        f.write("iter=$1\n")
+        f.write("next=$((iter+1))\n\n")
+        f.write("cp gro-files/iter${iter}.gro gro-files/iter${next}.gro\n")
+        f.write("cp topology/iter${iter}.top topology/iter${next}.top\n")
+
+    # write preprocess script
+    with open(os.path.join(directory, 'preprocess.sh'), 'w') as f:
+        f.write("#!/bin/bash\n\n")
+        f.write(f"python {directory}.py     -inputs_file {input_name} \\\n")
+        f.write("                          -preprocess_database init.db \\\n")
+        f.write("                          -main_database sqlite_memdb.db\\\n")
+        f.write("                          -preprocess_only True\n")
+        
+    print(f"Wrote preprocess.sh script in {directory}.")
+
+    # write run-code script
+    with open(os.path.join(directory, 'run-code.sh'), 'w') as f:
+        f.write("#!/bin/bash\n\n")
+        f.write(f"python {directory}.py     -inputs_file {input_name} \\\n")
+        f.write("                          -preprocess_database init.db \\\n")
+        f.write("                          -main_database sqlite_memdb.db\n")
+        
+    print(f"Wrote run-code.sh script in {directory}.")
+
+    # write polymerizeit.py script
+    with open(os.path.join(directory, f'{directory}.py'), 'w') as f:
+        f.write("import argparse\n\n")
+
+        f.write("import polymerizeit as pi\n")
+        f.write("from mupt.mutation.polymerizeit.gmx_simple import GMXsimple\n")
+        f.write("from mupt.mutation.polymerizeit.gmx_simple import create_parser\n\n")
+        f.write("if __name__==\"__main__\":\n")
+        f.write("    try:\n")
+        f.write("        \n")
+        f.write("        args=create_parser().parse_args()\n")
+        f.write("        param_args=vars(args)\n")
+        f.write("        if args.preprocess_only:\n")
+        f.write("            process=GMXsimple(**param_args)\n")
+        f.write("            process.preprocess()\n")
+        f.write("        else:\n")
+        f.write("            run=GMXsimple(**param_args)\n")
+        f.write(f"            r_val = run.run(0,{n_iterations})\n")
+        f.write("    except (RuntimeError, TypeError, NameError) as e:\n")
+        f.write("       print(e)\n")
+        f.write("       print(\"Something went wrong in checking the reactions\")\n")
+
+    print(f"Wrote polymerizeit.py script in {directory}.\n")
+
+    print("Setup complete.\n")
+
 
 def write_pi_input_gro(monomer_list, repeat_unit_list, monomer_filenames, repeat_unit_filenames, reactions, reactive_groups, distance_cutoff, outname, **kwargs):
     print("Writing the input file for PolymerizeIt! with GRO files ...")
@@ -8,9 +133,15 @@ def write_pi_input_gro(monomer_list, repeat_unit_list, monomer_filenames, repeat
         f.write(f"md_engine=gromacs\n\n")
         f.write("; Monomers and repeat units\n")
         for i, monomer in enumerate(monomer_list):
-            f.write(f"mon_{['A','B'][i]}={monomer},{monomer_filenames[i]}.gro\n")
+            if kwargs.get('root', True):
+                f.write(f"mon_{['A','B'][i]}={monomer},{monomer_filenames[i]}.gro\n")
+            else:
+                f.write(f"mon_{['A','B'][i]}={monomer},gro-files/{monomer_filenames[i]}.gro\n")
         for i, repeat_unit in enumerate(repeat_unit_list):
-            f.write(f"repeat_unit_{i+1}={repeat_unit},{repeat_unit_filenames[i]}.gro\n")
+            if kwargs.get('root', True):
+                f.write(f"repeat_unit_{i+1}={repeat_unit},{repeat_unit_filenames[i]}.gro\n")
+            else:
+                f.write(f"repeat_unit_{i+1}={repeat_unit},gro-files/{repeat_unit_filenames[i]}.gro\n")
 
         # generate graphs for monomers and repeat units
         graph_dict = {}
@@ -28,7 +159,7 @@ def write_pi_input_gro(monomer_list, repeat_unit_list, monomer_filenames, repeat
                 for atom in graph_dict[mol].nodes(data=True):
                     if atom[1]['atom_type'].startswith(reactive_groups[r][i][0]):
                         neighbors = list((neighbor, graph_dict[mol].nodes[neighbor]['atom_type']) for neighbor in graph_dict[mol].neighbors(atom[0]))
-                        print(f"Neighbors of atom {atom[0]} ({atom[1]['atom_type']}) in {mol}: {neighbors}")
+                        # print(f"Neighbors of atom {atom[0]} ({atom[1]['atom_type']}) in {mol}: {neighbors}")
                         neighbor_match = []
                         for rg in reactive_groups[r][i][1:]:
                             for neighbor in neighbors:
@@ -40,7 +171,7 @@ def write_pi_input_gro(monomer_list, repeat_unit_list, monomer_filenames, repeat
                 if not indices:
                     raise ValueError(f"No matching atom found in {mol} for reactive group {reactive_groups[r][i]}")
                 reacting_atoms.append(indices[0])  # take the first match for simplicity
-            print(reacting_atoms)
+            print(f"Reacting atoms for reaction {reaction}: {reacting_atoms}")
 
             # identify corresponding atoms in the product
             product_atoms = []
@@ -57,7 +188,7 @@ def write_pi_input_gro(monomer_list, repeat_unit_list, monomer_filenames, repeat
                             if rg in neighbor_list:
                                 neighbor_list.remove(rg)
                         neighbors = list((neighbor, graph_dict[reaction[2]].nodes[neighbor]['atom_type']) for neighbor in graph_dict[reaction[2]].neighbors(atom[0]))
-                        print(f"Neighbors of atom {atom[0]} ({atom[1]['atom_type']}) in {reaction[2]}: {neighbors}")
+                        # print(f"Neighbors of atom {atom[0]} ({atom[1]['atom_type']}) in {reaction[2]}: {neighbors}")
                         neighbor_match = []
                         for rg in neighbor_list:
                             for neighbor in neighbors:
@@ -99,7 +230,7 @@ def write_pi_input_gro(monomer_list, repeat_unit_list, monomer_filenames, repeat
                     raise ValueError(f"Mismatch in atom connectivity between monomers and product for reaction {reaction}")
 
             product_atoms = [mon_idx[0][0][0], mon_idx[1][0][0]]
-            print(product_atoms)
+            print(f"Corresponding atoms in product {reaction}: {product_atoms}")
 
             f.write(f"reference_reaction_{r+1}={reaction[0]}({reacting_atoms[0]}) & {reaction[1]}({reacting_atoms[1]}) : {reaction[2]}({product_atoms[0]}) & {reaction[2]}({product_atoms[1]})\n")
 
@@ -133,6 +264,12 @@ def write_pi_input_gro(monomer_list, repeat_unit_list, monomer_filenames, repeat
         f.write("\n; Other parameters\n")
         f.write(f"distance_cutoff={distance_cutoff}\n")
         f.write(f"same_monomer_reaction=no\n")
+
+        f.write("\n; Other pre-processing/core module information\n")
+        f.write(f"atom_name_same_as_atom_type=yes\n")
+        f.write(f"chain_names_repeat=yes\n")
+    
+    print(f"\nInput file {outname} written successfully.\n")
 
 def generate_graph_gromacs(gro_file, itp_file):
     molgraph = nx.Graph()
