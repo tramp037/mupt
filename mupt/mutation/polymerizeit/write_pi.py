@@ -318,3 +318,53 @@ def generate_graph_gromacs(gro_file, itp_file):
     #     print("matplotlib not installed, skipping graph visualization.")
 
     return molgraph
+
+
+def write_pi_input_repr(monomer_list, repeat_unit_list, monomer_filenames, repeat_unit_filenames, reactions, reacting_atoms, monomer_indices, distance_cutoff, outname, **kwargs):
+    print("Writing the input file for PolymerizeIt! with GRO files ...")
+    with open(outname, 'w') as f:
+        f.write("; Input file for PolymerizeIt!\n")
+        f.write(f"polymer_name={kwargs.get('polymer_name', 'polymer')}\n")
+        f.write(f"md_engine=gromacs\n\n")
+        f.write("; Monomers and repeat units\n")
+        for i, monomer in enumerate(monomer_list):
+            if kwargs.get('root', True):
+                f.write(f"mon_{['A','B'][i]}={monomer},{monomer_filenames[i]}.gro\n")
+            else:
+                f.write(f"mon_{['A','B'][i]}={monomer},gro-files/{monomer_filenames[i]}.gro\n")
+        for i, repeat_unit in enumerate(repeat_unit_list):
+            if kwargs.get('root', True):
+                f.write(f"repeat_unit_{i+1}={repeat_unit},{repeat_unit_filenames[i]}.gro\n")
+            else:
+                f.write(f"repeat_unit_{i+1}={repeat_unit},gro-files/{repeat_unit_filenames[i]}.gro\n")
+
+        f.write("\n; Reference reactions\n")
+        for r, reaction in enumerate(reactions):
+
+            f.write(f"reference_reaction_{r+1}={reaction[0]}({reacting_atoms[r][0]}) & {reaction[1]}({reacting_atoms[r][1]}) : {reaction[2]}({reacting_atoms[r][2]}) & {reaction[2]}({reacting_atoms[r][3]})\n")
+
+            f.write(f"\n; Product indices\n")
+            monomer_indices[r][0].sort()
+            monomer_indices[r][1].sort()
+            print(f"Monomer A indices in product {reaction[2]}: {monomer_indices[r][0]}")
+            print(f"Monomer B indices in product {reaction[2]}: {monomer_indices[r][1]}")
+
+            f.write(f"atom_indices_DIM_A1 = {','.join(map(str, monomer_indices[r][0]))}\n")
+            f.write(f"atom_indices_DIM_B1 = {','.join(map(str, monomer_indices[r][1]))}\n")
+            f.write(f"DIM_total_atoms={len(monomer_indices[r][0]) + len(monomer_indices[r][1])}\n")
+
+        f.write(f"\n; Reaction criteria\n")
+        criteria = kwargs.get('reaction_criteria', ['DistanceCutoff', 'ClosestPair'])
+        f.write(f"reaction_criteria={','.join(criteria)}\n")
+        post_reaction = kwargs.get('post_reaction_updates', ['RedistributeProductCharges'])
+        f.write(f"post_reaction_updates={','.join(post_reaction)}\n")
+
+        f.write("\n; Other parameters\n")
+        f.write(f"distance_cutoff={distance_cutoff}\n")
+        f.write(f"same_monomer_reaction=no\n")
+
+        f.write("\n; Other pre-processing/core module information\n")
+        f.write(f"atom_name_same_as_atom_type=yes\n")
+        f.write(f"chain_names_repeat=yes\n")
+    
+    print(f"\nInput file {outname} written successfully.\n")
