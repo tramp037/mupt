@@ -27,7 +27,7 @@ input_name = 'input-pa.txt'
 
 import os
 
-from mupt.mutation.polymerizeit import write_pi as wpi
+from mupt.reactions.polymerizeit import write_pi as wpi
 
 
 wpi.make_pi(dirname, molecules, filenames, forcefield, emin_file, equil_file, input_name, n_iterations)

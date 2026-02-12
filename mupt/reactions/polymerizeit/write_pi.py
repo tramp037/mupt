@@ -103,8 +103,8 @@ def make_pi(directory, molecules, filenames, forcefield, emin_file, equil_file, 
         f.write("import argparse\n\n")
 
         f.write("import polymerizeit as pi\n")
-        f.write("from mupt.mutation.polymerizeit.gmx_simple import GMXsimple\n")
-        f.write("from mupt.mutation.polymerizeit.gmx_simple import create_parser\n\n")
+        f.write("from mupt.reactions.polymerizeit.gmx_simple import GMXsimple\n")
+        f.write("from mupt.reactions.polymerizeit.gmx_simple import create_parser\n\n")
         f.write("if __name__==\"__main__\":\n")
         f.write("    try:\n")
         f.write("        \n")
