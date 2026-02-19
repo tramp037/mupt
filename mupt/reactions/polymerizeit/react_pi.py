@@ -127,6 +127,7 @@ def openff_topol(mon_names, mon_A, mon_B, dim):
 
 
 def openff_atom_typing(mon_names, mon_A_top, mon_B_top, dim_top):
+    print("Performing atom typing. This may take a few minutes...")
     # # load the forcefield .xml file
     forcefield = ForceField("openff-2.2.0.offxml")
     # # create an openmm system first with the atom types assigned
@@ -145,6 +146,7 @@ def openff_atom_typing(mon_names, mon_A_top, mon_B_top, dim_top):
     mon_B_int.to_gromacs(prefix=mon_names[1].lower(), _merge_atom_types=True)
     dim_int = forcefield.create_interchange(dim_top)
     dim_int.to_gromacs(prefix="dim", _merge_atom_types=True)
+    print("Atom typing complete!")
 
 def combine_atom_types(mon_names):
     shutil.copyfile(f'{mon_names[0].lower()}.top', f'{mon_names[0].lower()}_temp.top')

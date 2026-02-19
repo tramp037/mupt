@@ -4,7 +4,7 @@
 mon_A_smi = 'c1ccc(N)cc1N'
 mon_B_smi = 'c1c(C(=O)Cl)cc(C(=O)Cl)cc1C(=O)Cl'
 mon_names = ['MPD', 'TMC']
-dim_name = ['DIM']
+dim_name = 'DIM'
 
 # Define the pieces of the reaction template
 react_template_A = '[N:1]'

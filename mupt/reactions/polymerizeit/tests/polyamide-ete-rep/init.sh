@@ -6,7 +6,7 @@ source $1
 eval "$(conda shell.bash hook)"
 conda activate mupt
 
-cp input.inp polyamide/init-files/
+cp inputs.inp polyamide/init-files/
 cp init.py polyamide/init-files/
 
 cd polyamide
@@ -18,7 +18,7 @@ cp topology/tmc_gmx.itp init-files/tmc_gmx.itp
 cd init-files
 
 # generate input files
-python init.py -i input.inp
+python init.py -i inputs.inp
 
 # run energy minimization
 gmx grompp -f emin.mdp -c polymer.gro -p topol.top -o emin.tpr
