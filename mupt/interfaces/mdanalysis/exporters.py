@@ -18,7 +18,7 @@ from typing import Optional
 from collections import Counter
 
 from ...mupr.primitives import Primitive
-from ...mupr.properties import _is_SAAMR_compliant
+from ...mupr.properties import is_SAAMR_compliant
 from ...chemistry.core import BOND_ORDER
 
 import logging
@@ -127,7 +127,7 @@ def primitive_to_mdanalysis(
     >>> LOGGER.info(f"Number of segments: {universe.segments.n_segments}")
     """
 
-    if not _is_SAAMR_compliant(univprim):
+    if not is_SAAMR_compliant(univprim):
         raise ValueError(
             "Primitive is not SAAMR-compliant. Expected a hierarchy ordered as "
             "universe -> chains -> residues -> atoms. Ensure that the input "
