@@ -13,7 +13,7 @@ __email__ = "jola3134@colorado.edu"
 import pytest
 from mupt.interfaces.mdanalysis.exporters import primitive_to_mdanalysis
 from mupt.mupr.primitives import Primitive
-from periodictable import elements
+from mupt.chemistry import ELEMENTS
 
 
 def count_bonds_in_primitive(univprim):
@@ -53,7 +53,7 @@ def count_bonds_in_primitive(univprim):
 
 
 @pytest.mark.parametrize(
-    "fixture_name,resname_fixture",
+    "primitive_fixture,resname_fixture",
     [
         ("single_polyethylene_2mer", "polyethylene_resname_map"),
         ("single_polyethylene_3mer", "polyethylene_resname_map"),
@@ -63,7 +63,7 @@ def count_bonds_in_primitive(univprim):
     ],
     ids=["2mer", "3mer", "multi_chain", "BPA_BPS", "single_helium_atom"],
 )
-def test_atom_count_preservation(fixture_name, resname_fixture, request):
+def test_atom_count_preservation(primitive_fixture, resname_fixture, request):
     """
     Parametrized test verifying that primitive_to_mdanalysis preserves all atoms.
 
@@ -71,14 +71,14 @@ def test_atom_count_preservation(fixture_name, resname_fixture, request):
     maintains atom count regardless of system size or chemistry type.
 
     The parametrize decorator runs this test once for each tuple in the list:
-    - fixture_name: Name of the fixture providing the Primitive system
+    - primitive_fixture: Name of the fixture providing the Primitive system
     - resname_fixture: Name of the fixture providing the residue name map
     - request: Pytest built-in fixture for dynamic fixture loading
 
     Usage: Add new systems by adding tuples to the parametrize list.
     """
     # Arrange: Dynamically get the fixtures by name
-    univprim = request.getfixturevalue(fixture_name)
+    univprim = request.getfixturevalue(primitive_fixture)
     resname_map = request.getfixturevalue(resname_fixture)
 
     # Act: Convert to MDAnalysis
@@ -89,9 +89,8 @@ def test_atom_count_preservation(fixture_name, resname_fixture, request):
         f"Expected {len(univprim.leaves)} atoms, found {mda_exported_system.atoms.n_atoms}"
     )
 
-
 @pytest.mark.parametrize(
-    "fixture_name,resname_fixture",
+    "primitive_fixture,resname_fixture",
     [
         ("single_polyethylene_2mer", "polyethylene_resname_map"),
         ("single_polyethylene_3mer", "polyethylene_resname_map"),
@@ -101,7 +100,7 @@ def test_atom_count_preservation(fixture_name, resname_fixture, request):
     ],
     ids=["2mer", "3mer", "multi_chain", "BPA_BPS", "single_helium_atom"],
 )
-def test_bond_connectivity_preservation(fixture_name, resname_fixture, request):
+def test_bond_connectivity_preservation(primitive_fixture, resname_fixture, request):
     """
     Parametrized test verifying that primitive_to_mdanalysis preserves bond connectivity.
 
@@ -116,7 +115,7 @@ def test_bond_connectivity_preservation(fixture_name, resname_fixture, request):
 
     Parameters
     ----------
-    fixture_name : str
+    primitive_fixture : str
         Name of the fixture providing the Primitive system
     resname_fixture : str
         Name of the fixture providing the residue name map
@@ -124,7 +123,7 @@ def test_bond_connectivity_preservation(fixture_name, resname_fixture, request):
         Pytest built-in fixture for dynamic fixture loading
     """
     # Arrange: Get the fixtures
-    univprim = request.getfixturevalue(fixture_name)
+    univprim = request.getfixturevalue(primitive_fixture)
     resname_map = request.getfixturevalue(resname_fixture)
 
     # Count bonds in original Primitive (separately by type)
@@ -148,7 +147,6 @@ def test_bond_connectivity_preservation(fixture_name, resname_fixture, request):
         f"but MDAnalysis Universe has {actual_bond_count} bonds"
     )
 
-
 # ============================================================================
 # NEGATIVE TEST CASES: Verify proper error handling for invalid inputs
 # ============================================================================
@@ -157,16 +155,16 @@ def test_bond_connectivity_preservation(fixture_name, resname_fixture, request):
 # Each returns a fresh Primitive per call to avoid mutation risks from shared
 # mutable anytree NodeMixin state across parametrized test runs.
 
-
-def _build_non_saamr_shallow() -> Primitive:
+@pytest.fixture(scope='function')
+def non_SAAMR_hierarchy_shallow() -> Primitive:
     """Universe -> Atom directly (depth=1, should be 3). Violates SAAMR."""
     universe = Primitive(label="universe")
-    atom = Primitive(label="He", element=elements.He)
+    atom = Primitive(label="He", element=ELEMENTS[2])
     universe.attach_child(atom)
     return universe
 
-
-def _build_non_saamr_non_atom_leaf() -> Primitive:
+@pytest.fixture(scope='function')
+def non_SAAMR_hierarchy_non_atom_leaf() -> Primitive:
     """Leaf has no element attribute. Violates SAAMR atom requirement."""
     universe = Primitive(label="universe")
     molecule = Primitive(label="mol")
@@ -177,14 +175,14 @@ def _build_non_saamr_non_atom_leaf() -> Primitive:
     repeat_unit.attach_child(non_atom)
     return universe
 
-
-def _build_valid_saamr_helium() -> Primitive:
+@pytest.fixture(scope='function')
+def SAAMR_hierarchy_helium() -> Primitive:
     """Minimal valid SAAMR structure for testing resname_map validation.
     Hierarchy: Universe -> Molecule -> Repeat-Unit ('unit') -> He atom."""
     universe = Primitive(label="universe")
     molecule = Primitive(label="mol")
     repeat_unit = Primitive(label="unit")
-    atom = Primitive(label="He", element=elements.He)
+    atom = Primitive(label="He", element=ELEMENTS[2])
     universe.attach_child(molecule)
     molecule.attach_child(repeat_unit)
     repeat_unit.attach_child(atom)
@@ -192,53 +190,45 @@ def _build_valid_saamr_helium() -> Primitive:
 
 
 @pytest.mark.parametrize(
-    "build_primitive, resname_map",
+    "primitive_fixture, resname_map",
     [
-        (_build_non_saamr_shallow, {"He": "HEL"}),  # depth=1, should be 3
-        (_build_non_saamr_non_atom_leaf, {"unit": "UNT"}),  # leaf missing element
+        ('non_SAAMR_hierarchy_shallow', {"He": "HEL"}),         # depth=1, should be 3
+        ('non_SAAMR_hierarchy_non_atom_leaf', {"unit": "UNT"}), # leaf missing element
     ],
     ids=["shallow_depth", "non_atom_leaf"],
 )
-def test_non_saamr_primitive_raises_value_error(build_primitive, resname_map):
+def test_mda_export_reject_non_SAAMR(primitive_fixture, resname_map, request):
     """
-    Non-SAAMR-compliant Primitives must be rejected with ValueError.
+    Check that non-SAAMR-compliant Primitives raise ValueError when attempting export to MDAnalysis.
 
     The exporter requires Primitives organized as
     Universe -> Molecules -> Repeat-Units -> Atoms (depth=3 for all leaves,
-    all leaves must have an element attribute). Violations of either condition
-    must raise ValueError so users get clear feedback rather than silent
-    corruption of the exported topology.
-
-    Note: the SAAMR compliance check was changed from ``assert`` to
-    ``raise ValueError`` in exporters.py, so the expected exception is
-    ValueError (not AssertionError).
+    all leaves must have an element attribute). 
+    Violations of either condition must raise ValueError to give user clear feedback
     """
+    univprim = request.getfixturevalue(primitive_fixture)
     with pytest.raises(ValueError):
-        primitive_to_mdanalysis(build_primitive(), resname_map=resname_map)
-
+        primitive_to_mdanalysis(univprim, resname_map=resname_map)
 
 @pytest.mark.parametrize(
-    "resname_map",
+    "primitive_fixture, resname_map",
     [
-        {"unit": "HE"},  # 2 chars — too short for PDB 3-char requirement
-        {"unit": "HELL"},  # 4 chars — too long for PDB 3-char requirement
-        {},  # missing entry; falls back to label 'unit' (4 chars) → ValueError
+        ("SAAMR_hierarchy_helium", {"unit": "HE"}),     # 2 chars — too short for PDB 3-char requirement
+        ("SAAMR_hierarchy_helium", {"unit": "HELL"}),   # 4 chars — too long for PDB 3-char requirement
+        ("SAAMR_hierarchy_helium", {}), # missing entry; falls back to label 'unit' (4 chars) → ValueError
     ],
     ids=["too_short", "too_long", "missing_entry"],
 )
-def test_invalid_resname_map_raises_value_error(resname_map):
+def test_invalid_resname_map_raises_value_error(primitive_fixture, resname_map, request):
     """
-    Invalid resname_map entries must raise ValueError.
+    Check that invalid resname_map entries raise ValueError when attempting export to MDAnalysis.
 
     The ``_pdb_resname`` helper enforces that residue names are exactly
     3 characters for PDB compliance. This test covers three failure modes:
     - Mapped name too short (2 chars)
     - Mapped name too long (4 chars)
     - Missing map entry where the fallback label itself is not 3 chars
-
-    Uses pytest.raises (not pytest.mark.xfail) because these tests verify
-    intentional error-handling behavior, not known failures.
     """
-    univprim = _build_valid_saamr_helium()
+    univprim = request.getfixturevalue(primitive_fixture)
     with pytest.raises(ValueError):
         primitive_to_mdanalysis(univprim, resname_map=resname_map)
