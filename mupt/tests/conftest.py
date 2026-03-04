@@ -8,7 +8,7 @@ __email__ = "jola3134@colorado.edu"
 import pytest
 
 import logging
-from typing import Any, Callable, Generator, Mapping, Iterable, Optional
+from typing import Any, Generator, Mapping, Iterable, Optional
 
 import numpy as np
 import networkx as nx
@@ -285,54 +285,6 @@ def build_SAAMR_polymer_system(
     return univprim
 
 
-"""
-NOTE: This concept is confusing! At a high level, the Factory returns
-a function that will have custom arguments passed into it. Each time
-we call the Factory function, it instantiates a new call to build_SAAMR_polymer_system()
-with the parameters we provide when we invoke the Factory.
-
-Factory Fixture Usage Examples
--------------------------------
-The factory fixtures (polyethylene_factory, PES_factory) allow creating
-systems with custom parameters in your tests:
-
-    def test_with_custom_system(polyethylene_factory):
-        # Single chain with specific length
-        small_system = polyethylene_factory(chain_len=5, n_chains=1)
-        
-        # Multiple chains with length variation
-        large_system = polyethylene_factory(
-            chain_len_min=10,
-            chain_len_max=20,
-            n_chains=50
-        )
-        
-        # Custom parameters (bond_length, angle_max_rad, etc.)
-        custom_system = polyethylene_factory(
-            chain_len=10,
-            n_chains=5,
-            bond_length=2.0,
-            angle_max_rad=np.pi/6
-        )
-    
-    def test_with_PES(PES_factory):
-        # Pure BPS homopolymer
-        bps_only = PES_factory(
-            chain_len=15,
-            n_chains=10,
-            bps_fraction=1.0
-        )
-        
-        # Custom BPA/BPS ratio
-        custom_ratio = PES_factory(
-            chain_len_min=5,
-            chain_len_max=15,
-            n_chains=20,
-            bps_fraction=0.7  # 70% BPS, 30% BPA
-        )        
-"""
-
-
 @pytest.fixture
 def polyethylene_smiles() -> dict[str, str]:
     """SMILES definitions for polyethylene"""
@@ -369,126 +321,8 @@ def PES_resname_map() -> dict[str, str]:
 
 
 @pytest.fixture
-def polyethylene_factory(
-    polyethylene_smiles: dict[str, str],
-) -> Callable[..., Primitive]:
-    """
-    Factory for creating polyethylene systems with configurable parameters.
-
-    Returns a function that builds polyethylene systems with specified:
-    - Chain length (number of repeat units)
-    - Number of chains
-    - Other build parameters
-
-    Examples
-    --------
-    >>> def test_something(polyethylene_factory):
-    ...     # Single 2-mer chain
-    ...     system1 = polyethylene_factory(chain_len=2, n_chains=1)
-    ...
-    ...     # Multiple chains with varying lengths
-    ...     system2 = polyethylene_factory(
-    ...         chain_len_min=5,
-    ...         chain_len_max=10,
-    ...         n_chains=20
-    ...     )
-    """
-
-    def _make_polyethylene(
-        chain_len: Optional[int] = None,
-        chain_len_min: Optional[int] = None,
-        chain_len_max: Optional[int] = None,
-        n_chains: int = 1,
-        random_seed: Optional[int] = 42,
-        **kwargs,
-    ) -> Primitive:
-        # Handle single chain_len or min/max range
-        if chain_len is not None:
-            chain_len_min = chain_len_max = chain_len
-        elif chain_len_min is None or chain_len_max is None:
-            raise ValueError(
-                "Must provide either chain_len or both chain_len_min and chain_len_max"
-            )
-
-        return build_SAAMR_polymer_system(
-            polyethylene_smiles,
-            mid_distrib={"ethane": 1.0},
-            n_chains=n_chains,
-            chain_len_min=chain_len_min,
-            chain_len_max=chain_len_max,
-            random_seed=random_seed,
-            **kwargs,
-        )
-
-    return _make_polyethylene
-
-
-@pytest.fixture
-def PES_factory(polyethersulfone_smiles) -> Callable[..., Primitive]:
-    """
-    Factory for creating BPA/BPS copolymer systems with configurable parameters.
-
-    Returns a function that builds BPA/BPS systems with specified:
-    - Chain length (number of repeat units)
-    - Number of chains
-    - BPA/BPS ratio
-    - Other build parameters
-
-    Examples
-    --------
-    >>> def test_something(PES_factory):
-    ...     # 5 chains, 40% BPS / 60% BPA
-    ...     system1 = PES_factory(
-    ...         chain_len_min=5,
-    ...         chain_len_max=10,
-    ...         n_chains=5,
-    ...         bps_fraction=0.4
-    ...     )
-    ...
-    ...     # Pure BPS homopolymer
-    ...     system2 = PES_factory(
-    ...         chain_len=20,
-    ...         n_chains=10,
-    ...         bps_fraction=1.0
-    ...     )
-    """
-
-    def _make_PES(
-        chain_len: Optional[int] = None,
-        chain_len_min: Optional[int] = None,
-        chain_len_max: Optional[int] = None,
-        n_chains: int = 5,
-        bps_fraction: float = 0.4,
-        random_seed: Optional[int] = 42,
-        **kwargs,
-    ) -> Primitive:
-        # Handle single chain_len or min/max range
-        if chain_len is not None:
-            chain_len_min = chain_len_max = chain_len
-        elif chain_len_min is None or chain_len_max is None:
-            raise ValueError(
-                "Must provide either chain_len or both chain_len_min and chain_len_max"
-            )
-
-        # Calculate BPA/BPS distribution
-        mid_distrib = {"bisphenol_S": bps_fraction, "bisphenol_A": 1.0 - bps_fraction}
-
-        return build_SAAMR_polymer_system(
-            polyethersulfone_smiles,
-            mid_distrib,
-            n_chains=n_chains,
-            chain_len_min=chain_len_min,
-            chain_len_max=chain_len_max,
-            random_seed=random_seed,
-            **kwargs,
-        )
-
-    return _make_PES
-
-
-@pytest.fixture
 def single_polyethylene_2mer(
-    polyethylene_factory: Callable[..., Primitive],
+    polyethylene_smiles: dict[str, str],
 ) -> Primitive:
     """
     Fixture providing a Primitive containing a single molecule of
@@ -503,12 +337,19 @@ def single_polyethylene_2mer(
     - 6 intra-residue bonds
     - 1 inter-residue bond
     """
-    return polyethylene_factory(chain_len=2, n_chains=1)
+    return build_SAAMR_polymer_system(
+        polyethylene_smiles,
+        mid_distrib={"ethane": 1.0},
+        n_chains=1,
+        chain_len_min=2,
+        chain_len_max=2,
+        random_seed=42,
+    )
 
 
 @pytest.fixture
 def single_polyethylene_3mer(
-    polyethylene_factory: Callable[..., Primitive],
+    polyethylene_smiles: dict[str, str],
 ) -> Primitive:
     """
     Fixture providing a Primitive containing a single molecule of
@@ -523,12 +364,19 @@ def single_polyethylene_3mer(
     - 11 intra-residue bonds
     - 2 inter-residue bonds
     """
-    return polyethylene_factory(chain_len=3, n_chains=1)
+    return build_SAAMR_polymer_system(
+        polyethylene_smiles,
+        mid_distrib={"ethane": 1.0},
+        n_chains=1,
+        chain_len_min=3,
+        chain_len_max=3,
+        random_seed=42,
+    )
 
 
 @pytest.fixture
 def multi_polyethylene_system(
-    polyethylene_factory: Callable[..., Primitive],
+    polyethylene_smiles: dict[str, str],
 ) -> Primitive:
     """
     Fixture providing a multi-chain polyethylene system with varying chain lengths.
@@ -539,11 +387,18 @@ def multi_polyethylene_system(
     - 5-10 repeat units per chain
     - Variable total atoms/bonds depending on random chain lengths
     """
-    return polyethylene_factory(chain_len_min=5, chain_len_max=10, n_chains=10)
+    return build_SAAMR_polymer_system(
+        polyethylene_smiles,
+        mid_distrib={"ethane": 1.0},
+        n_chains=10,
+        chain_len_min=5,
+        chain_len_max=10,
+        random_seed=42,
+    )
 
 
 @pytest.fixture
-def PES_copolymer(PES_factory: Callable[..., Primitive]) -> Primitive:
+def PES_copolymer(polyethersulfone_smiles: dict[str, str]) -> Primitive:
     """
     Fixture providing a default BPA/BPS copolymer system Primitive.
     Primitive is intended to be SAAMR-compliant.
@@ -551,7 +406,14 @@ def PES_copolymer(PES_factory: Callable[..., Primitive]) -> Primitive:
 
     Default configuration: 5 chains, 5-10 repeat units per chain, 40% BPS / 60% BPA
     """
-    return PES_factory(chain_len_min=5, chain_len_max=10, n_chains=5, bps_fraction=0.4)
+    return build_SAAMR_polymer_system(
+        polyethersulfone_smiles,
+        mid_distrib={"bisphenol_S": 0.4, "bisphenol_A": 0.6},
+        n_chains=5,
+        chain_len_min=5,
+        chain_len_max=10,
+        random_seed=42,
+    )
 
 
 @pytest.fixture
