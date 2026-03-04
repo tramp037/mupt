@@ -15,7 +15,6 @@ import networkx as nx
 
 from ..mupr.primitives import Primitive
 from ..mupr.topology import TopologicalStructure
-from ..geometry.shapes import Ellipsoid
 from ..geometry.coordinates.reference import origin
 from ..geometry.coordinates.directions import random_unit_vector
 from ..geometry.transforms.rigid import rigid_vector_coalignment
@@ -80,13 +79,12 @@ def sequence_repeat_units(
 def build_lexicon(
     rep_unit_smiles: dict[str, str],
     axis: int = 0,
-    semiminor_fraction: float = 0.5,
 ) -> dict[str, Primitive]:
     """
     Build a lexicon of repeat unit Primitives from SMILES strings.
 
-    Each repeat unit is oriented along the specified axis with an encompassing
-    ellipsoidal shape for coarse-grained representation.
+    Each repeat unit is oriented along the specified axis. Atom positions
+    are embedded via RDKit and aligned to the specified axis.
 
     Parameters
     ----------
@@ -95,8 +93,6 @@ def build_lexicon(
         atom map numbers [*:1] and [*:2] marking the head/tail connection sites.
     axis : int, default=0
         Axis along which to orient repeat units (0=X, 1=Y, 2=Z).
-    semiminor_fraction : float, default=0.5
-        Fraction of major radius for the minor axes of the ellipsoid.
 
     Returns
     -------
@@ -137,12 +133,6 @@ def build_lexicon(
             )
             unitprim.rigidly_transform(axis_alignment)
 
-            # Set encompassing ellipsoidal shape
-            semiminor = semiminor_fraction * major_radius
-            radii = np.full(3, semiminor)
-            radii[axis] = major_radius
-            unitprim.shape = Ellipsoid(radii)
-
             lexicon[unit_name] = unitprim
             logger.debug(
                 f"Built repeat unit '{unit_name}': {len(unitprim.leaves)} atoms"
@@ -163,7 +153,6 @@ def build_polymer_system(
     angle_max_rad: float = np.pi / 4,
     exclusion_radius: float = 20.0,
     axis: int = 0,
-    semiminor_fraction: float = 0.5,
     random_seed: Optional[int] = None,
 ) -> Primitive:
     """
@@ -202,8 +191,6 @@ def build_polymer_system(
         Radius from origin at which to start placing chains.
     axis : int, default=0
         Axis along which to orient repeat units (0=X, 1=Y, 2=Z).
-    semiminor_fraction : float, default=0.5
-        Fraction of major radius for ellipsoid minor axes.
     random_seed : int, optional
         Random seed for reproducibility.
 
@@ -233,9 +220,7 @@ def build_polymer_system(
 
     # Build lexicon of repeat units
     logger.info(f"Building lexicon with {len(rep_unit_smiles)} repeat unit types")
-    lexicon = build_lexicon(
-        rep_unit_smiles, axis=axis, semiminor_fraction=semiminor_fraction
-    )
+    lexicon = build_lexicon(rep_unit_smiles, axis=axis)
 
     # Validate that required units are present
     for required in [head_name, tail_name] + list(mid_distrib.keys()):
@@ -566,9 +551,7 @@ def PES_copolymer(PES_factory: Callable[..., Primitive]) -> Primitive:
 
     Default configuration: 5 chains, 5-10 repeat units per chain, 40% BPS / 60% BPA
     """
-    return PES_factory(
-        chain_len_min=5, chain_len_max=10, n_chains=5, bps_fraction=0.4
-    )
+    return PES_factory(chain_len_min=5, chain_len_max=10, n_chains=5, bps_fraction=0.4)
 
 
 @pytest.fixture
