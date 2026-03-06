@@ -39,12 +39,9 @@ mon_A_react, mon_B_react, mon_A_prod, mon_B_prod = react_pi.identify_reactive_si
 # match the atom indices with monomer A or B
 mon_A_indices, mon_B_indices = react_pi.map_dimer_atoms_to_monomers(dim_prim, mon_A_prod, mon_B_prod)
 
-# create topologies for openff
-mon_A_top, mon_B_top, dim_top =  react_pi.openff_topol(mon_names, mon_A, mon_B, dim)
-
 # assign atom types
 # this will take a few minutes
-react_pi.openff_atom_typing(mon_names, mon_A_top, mon_B_top, dim_top)
+react_pi.openff_atom_typing(mon_names, mon_A_smi, mon_B_smi, dim_smi)
 
 # combine atom types from each molecule
 atom_types_dict = react_pi.combine_atom_types(mon_names)

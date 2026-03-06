@@ -9,8 +9,10 @@ from rdkit import Chem
 from rdkit.Chem import rdChemReactions
 
 import networkx as nx
+import numpy as np
 
 from openff.toolkit import ForceField, Molecule, Topology
+from openff.units import unit
 
 import shutil
 import periodictable
@@ -88,45 +90,21 @@ def map_dimer_atoms_to_monomers(dim_prim, mon_A_prod, mon_B_prod):
 
     return mon_A_indices, mon_B_indices
 
+def openff_atom_typing(mon_names, mon_A_smi, mon_B_smi, dim_smi):
+    mon_A_mol = Molecule.from_smiles(mon_A_smi)
+    mon_B_mol = Molecule.from_smiles(mon_B_smi)
+    dim_mol = Molecule.from_smiles(dim_smi)
 
-def openff_topol(mon_names, mon_A, mon_B, dim):
-    # Write to pdb files for atom typing with openff
-    a, b, c = 20,20,20  # Box dimensions
-    with open(f'{mon_names[0].lower()}.pdb', 'w') as f:
-        f.write(f"CRYST1{a:9.3f}{b:9.3f}{c:9.3f}  90.00  90.00  90.00 P 1           1\n")
-        f.write(Chem.MolToPDBBlock(mon_A).replace('UNL',mon_names[0].upper()))
+    for mol in [mon_A_mol, mon_B_mol, dim_mol]:
+        mol.generate_conformers(n_conformers=1)
 
-    with open(f'{mon_names[1].lower()}.pdb', 'w') as f:
-        f.write(f"CRYST1{a:9.3f}{b:9.3f}{c:9.3f}  90.00  90.00  90.00 P 1           1\n")
-        f.write(Chem.MolToPDBBlock(mon_B).replace('UNL',mon_names[1].upper()))
-    with open('dim.pdb', 'w') as f:
-        f.write(f"CRYST1{a:9.3f}{b:9.3f}{c:9.3f}  90.00  90.00  90.00 P 1           1\n")
-        f.write(Chem.MolToPDBBlock(dim).replace('UNL','DIM'))
+    mon_A_top = mon_A_mol.to_topology()
+    mon_B_top = mon_B_mol.to_topology()
+    dim_top = dim_mol.to_topology()
 
+    for top in [mon_A_top, mon_B_top, dim_top]:
+        top.box_vectors = np.array([[5.0, 0.0, 0.0], [0.0, 5.0, 0.0], [0.0, 0.0, 5.0]]) * unit.nanometer
 
-    mon_A_mol = Molecule.from_smiles(Chem.MolToSmiles(mon_A))
-    mon_B_mol = Molecule.from_smiles(Chem.MolToSmiles(mon_B))
-    dim_mol = Molecule.from_smiles(Chem.MolToSmiles(dim))
-
-    mon_A_top = Topology.from_pdb(
-        f"{mon_names[0].lower()}.pdb",
-        unique_molecules=[mon_A_mol],
-    )
-
-    mon_B_top = Topology.from_pdb(
-        f"{mon_names[1].lower()}.pdb",
-        unique_molecules=[mon_B_mol],
-    )
-
-    dim_top = Topology.from_pdb(
-        "dim.pdb",
-        unique_molecules=[dim_mol],
-    )
-
-    return mon_A_top, mon_B_top, dim_top
-
-
-def openff_atom_typing(mon_names, mon_A_top, mon_B_top, dim_top):
     print("Performing atom typing. This may take a few minutes...")
     # # load the forcefield .xml file
     forcefield = ForceField("openff-2.2.0.offxml")
@@ -136,7 +114,7 @@ def openff_atom_typing(mon_names, mon_A_top, mon_B_top, dim_top):
     mon_B_system = forcefield.create_openmm_system(mon_B_top)
 
     # # do the same for the dimer
-    # # will also take several minutes
+    # # will also take a few minutes
     dim_system = forcefield.create_openmm_system(dim_top)
 
     # # finally create the interchangers and write to GROMACS files

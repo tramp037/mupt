@@ -11,8 +11,8 @@ cp init.py polyamide/init-files/
 
 cd polyamide
 cp topology/forcefield.itp init-files/forcefield.itp
-cp topology/nonbond.itp init-files/nonbond.itp
-cp topology/bonded.itp init-files/bonded.itp
+cp topology/ff_nonbonded.itp init-files/ff_nonbonded.itp
+cp topology/ff_bonded.itp init-files/ff_bonded.itp
 cp topology/mpd_gmx.itp init-files/mpd_gmx.itp
 cp topology/tmc_gmx.itp init-files/tmc_gmx.itp
 cd init-files
