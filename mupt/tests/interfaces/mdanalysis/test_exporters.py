@@ -193,6 +193,18 @@ def SAAMR_hierarchy_helium() -> Primitive:
     return universe
 
 
+def test_mda_export_reject_empty_tree():
+    """
+    An empty Primitive (no children/leaves) must be rejected as
+    non-SAAMR-compliant by the default export path.  This guards
+    against the vacuous-truth bug where ``all()`` over an empty
+    iterable returns True.
+    """
+    empty_universe = Primitive(label="empty")
+    with pytest.raises(ValueError, match="not SAAMR-compliant"):
+        primitive_to_mdanalysis(empty_universe, resname_map={})
+
+
 @pytest.mark.parametrize(
     "primitive_fixture, resname_map",
     [
