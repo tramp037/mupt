@@ -195,14 +195,23 @@ def SAAMR_hierarchy_helium() -> Primitive:
 
 def test_mda_export_reject_empty_tree():
     """
-    An empty Primitive (no children/leaves) must be rejected as
-    non-SAAMR-compliant by the default export path.  This guards
-    against the vacuous-truth bug where ``all()`` over an empty
-    iterable returns True.
+    A root-only Primitive (no children) must be rejected as
+    non-SAAMR-compliant by the default export path.
+
+    Under anytree, a childless node is its own leaf, so ``prim.leaves``
+    returns ``[prim]`` (never empty).  The ``all()`` predicate in
+    ``is_SAAMR_compliant`` correctly rejects this because the root has
+    ``depth=0`` (not 3) and ``is_atom=False``.  This test verifies both
+    the ``is_SAAMR_compliant`` result and the exporter's rejection.
     """
-    empty_universe = Primitive(label="empty")
+    from mupt.mupr.properties import is_SAAMR_compliant
+
+    root_only = Primitive(label="empty")
+    assert not is_SAAMR_compliant(root_only), (
+        "Root-only Primitive should not be SAAMR-compliant"
+    )
     with pytest.raises(ValueError, match="not SAAMR-compliant"):
-        primitive_to_mdanalysis(empty_universe, resname_map={})
+        primitive_to_mdanalysis(root_only, resname_map={})
 
 
 @pytest.mark.parametrize(
