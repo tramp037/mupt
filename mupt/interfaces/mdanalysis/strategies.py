@@ -63,10 +63,31 @@ def _resolve_to_atom(parent: Primitive, conn_ref: ConnectorReference) -> Primiti
 
 
 def _bond_order_from_conn_ref(parent: Primitive, conn_ref: ConnectorReference) -> float:
-    """Infer bond order from a connection reference at the current parent level."""
+    """Infer bond order from a connection reference at the current parent level.
+
+    Parameters
+    ----------
+    parent : Primitive
+        The parent node whose ``internal_connections`` contain *conn_ref*.
+    conn_ref : ConnectorReference
+        Reference to the child primitive and its connector handle.
+
+    Returns
+    -------
+    float
+        Numeric bond order (defaults to 1.0 if the connector or its
+        bondtype cannot be resolved).
+    """
     child = parent.fetch_child(conn_ref.primitive_handle)
     connector = child.connectors.get(conn_ref.connector_handle)
     if connector is None:
+        LOGGER.warning(
+            "Connector %s not found on child %s of parent %s; "
+            "defaulting bond order to 1.0",
+            conn_ref.connector_handle,
+            conn_ref.primitive_handle,
+            parent.label,
+        )
         return 1.0
 
     bondtype: Optional[str] = getattr(connector, "bondtype", None)
