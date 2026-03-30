@@ -21,6 +21,7 @@ from ..geometry.transforms.rigid import rigid_vector_coalignment
 from ..interfaces.smiles import primitive_from_smiles
 from ..interfaces.rdkit import suppress_rdkit_logs
 from ..builders.random_walk import AngleConstrainedRandomWalk
+from ..mupr.properties import assign_SAAMR_roles
 
 
 logger = logging.getLogger(__name__)
@@ -282,6 +283,8 @@ def build_SAAMR_polymer_system(
         f"Built system: {n_chains} chains, {total_residues} residues, {total_atoms} atoms"
     )
 
+    assign_SAAMR_roles(univprim)
+
     return univprim
 
 
@@ -454,5 +457,7 @@ def single_helium_atom_saamr() -> Primitive:
     # Create the universe and attach the molecule
     universe_prim = Primitive(label="universe")
     universe_prim.attach_child(molecule_prim)
+
+    assign_SAAMR_roles(universe_prim)
 
     return universe_prim
