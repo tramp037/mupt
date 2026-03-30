@@ -249,6 +249,15 @@ class AllAtomExportStrategy(MDAExportStrategy):
                 data.bonds_set.add(bond_pair)
                 data.bond_orders.append(_bond_order_from_conn_ref(node, conn_ref1))
 
+        # Sort bonds for deterministic output (internal_connections is a set,
+        # so iteration order is nondeterministic without explicit sorting)
+        if data.bonds:
+            sorted_pairs = sorted(
+                zip(data.bonds, data.bond_orders), key=lambda pair: pair[0]
+            )
+            data.bonds = [b for b, _ in sorted_pairs]
+            data.bond_orders = [o for _, o in sorted_pairs]
+
         return data
 
 
