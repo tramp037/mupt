@@ -11,9 +11,6 @@ from rdkit.Chem import rdChemReactions
 import networkx as nx
 import numpy as np
 
-from openff.toolkit import ForceField, Molecule, Topology
-from openff.units import unit
-
 import shutil
 import periodictable
 
@@ -91,6 +88,8 @@ def map_dimer_atoms_to_monomers(dim_prim, mon_A_prod, mon_B_prod):
     return mon_A_indices, mon_B_indices
 
 def openff_atom_typing(mon_names, mon_A_smi, mon_B_smi, dim_smi):
+    from openff.toolkit import ForceField, Molecule, Topology
+    from openff.units import unit
     mon_A_mol = Molecule.from_smiles(mon_A_smi)
     mon_B_mol = Molecule.from_smiles(mon_B_smi)
     dim_mol = Molecule.from_smiles(dim_smi)
