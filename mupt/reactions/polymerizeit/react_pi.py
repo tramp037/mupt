@@ -1,7 +1,6 @@
 from mupt.interfaces.rdkit import primitive_from_rdkit, primitive_to_rdkit
 from mupt.interfaces.smiles import primitive_from_smiles
 
-
 from mupt.geometry.shapes import PointCloud
 import matplotlib.pyplot as plt
 
@@ -14,78 +13,112 @@ import numpy as np
 import shutil
 import periodictable
 
-def react_monomers_to_dimer(mon_A_smi, mon_B_smi, react_template_A, react_template_B, prod_template):
-    mon_A_prim = primitive_from_smiles(mon_A_smi, ensure_explicit_Hs=True, embed_positions=True)
-    mon_A = primitive_to_rdkit(mon_A_prim)
+def react_molecules_to_product(inputs, reaction, ex_h_template=False):
 
-    mon_B_prim = primitive_from_smiles(mon_B_smi, ensure_explicit_Hs=True, embed_positions=True)
-    mon_B = primitive_to_rdkit(mon_B_prim)
+    react_mols = []
+    reaction_info = inputs['reactions'][reaction]
+    for reactant in reaction_info['reactants']:
+        # verify that reactant molecules have SMILES strings defined
+        if 'smi' not in inputs['molecules'][reactant]:
+            print(f"Error: Reactant {reactant} does not have a SMILES string defined. Please add a 'smi' entry for this reactant in the input file.")
+            return
+        # generate the primitive and RDKit molecule for the reactant if not already done
+        if 'prim' in inputs['molecules'][reactant]:
+            print(f"Primitive already exists for reactant {reactant}. Skipping primitive generation.")
+        else:
+            primitive = primitive_from_smiles(inputs['molecules'][reactant]['smi'], ensure_explicit_Hs=True, embed_positions=True)
+            inputs['molecules'][reactant]['prim'] = primitive
+        if 'mol' in inputs['molecules'][reactant]:
+            print(f"RDKit molecule already exists for reactant {reactant}. Skipping RDKit molecule generation.")
+        else:
+            mol = primitive_to_rdkit(inputs['molecules'][reactant]['prim'])
+            inputs['molecules'][reactant]['mol'] = mol
+        if not ex_h_template:
+            react_mols.append(Chem.MolFromSmiles(Chem.MolToSmiles(inputs['molecules'][reactant]['mol'])))
+        else:
+            react_mols.append(inputs['molecules'][reactant]['mol'])
+        
+    # create the reaction SMARTS string from the templates in the input file
+    reactants_template = ".".join(reaction_info['react_template'])
+    products_template = ".".join(reaction_info['prod_template'])
 
-    # note: currently assumes all dimers are identical and takes the first product only
-    rxn = rdChemReactions.ReactionFromSmarts(f'{react_template_A}.{react_template_B}>>{prod_template}')
-    reacts = (Chem.MolFromSmiles(Chem.MolToSmiles(mon_A)),Chem.MolFromSmiles(Chem.MolToSmiles(mon_B)))
-    products = rxn.RunReactants(reacts)
+    # react to form products
+    rxn = rdChemReactions.ReactionFromSmarts(f'{reactants_template}>>{products_template}')
+    products = rxn.RunReactants(tuple(react_mols))
 
-    dim_smi = Chem.MolToSmiles(products[0][0])
+    # note: currently assumes all products are identical and takes the first product only
+    for i, product in enumerate(reaction_info['products']):
+        if product not in inputs['molecules']:
+            inputs['molecules'][product] = {}
+        else:
+            print(f"Warning: Product {product} already in molecules. Overwriting with new product information.")
+        prod_smi = Chem.MolToSmiles(products[i][0])
+        prod_prim = primitive_from_smiles(prod_smi, ensure_explicit_Hs=True, embed_positions=True)
+        prod_mol = primitive_to_rdkit(prod_prim)
+        inputs['molecules'][product]['smi'] = prod_smi
+        inputs['molecules'][product]['prim'] = prod_prim
+        inputs['molecules'][product]['mol'] = prod_mol
+    return
 
-    # Create the primitive and RDKit molecule for the dimer
-    dim_prim = primitive_from_smiles(dim_smi, ensure_explicit_Hs=True, embed_positions=True)
-    dim = primitive_to_rdkit(dim_prim)
+def identify_reactive_sites(inputs, reaction): #mon_A, mon_B, dim, react_template_A, react_idx_A, react_template_B, react_idx_B, prod_template, prod_idx_A, prod_idx_B, mon_names=['Monomer A', 'Monomer B']):
+    
+    react_idxs = []
+    reaction_info = inputs['reactions'][reaction]
+    for i, reactant in enumerate(reaction_info['reactants']):
+        if 'mol' not in inputs['molecules'][reactant]:
+            print(f"Error: Reactant {reactant} does not have an RDKit molecule defined. Please ensure that the reactant has been processed to generate the RDKit molecule before identifying reactive sites.")
+            return
 
-    return mon_A_prim, mon_A, mon_B_prim, mon_B, dim_prim, dim, dim_smi
+        matches = inputs['molecules'][reactant]['mol'].GetSubstructMatches(Chem.MolFromSmarts(reaction_info['react_template'][i]))
+        all_matches = []
 
-def identify_reactive_sites(mon_A, mon_B, dim, react_template_A, react_idx_A, react_template_B, react_idx_B, prod_template, prod_idx_A, prod_idx_B, mon_names=['Monomer A', 'Monomer B']):
-    matches = mon_A.GetSubstructMatches(Chem.MolFromSmarts(react_template_A))
-    all_matches = []
+        for match in matches:
+            all_matches.append(match[reaction_info['react_idx'][i]])
+
+        print("Reacting groups in " + reactant + ":", all_matches)
+        react_idxs.append(all_matches[0]+1)
+
+    # note: assumes that the first product is the "main" product and identifies reactive sites in that product only
+    product = reaction_info['products'][0]
+    if 'mol' not in inputs['molecules'][product]:
+        print(f"Error: Product {product} does not have an RDKit molecule defined. Please ensure that the product has been processed to generate the RDKit molecule before identifying reactive sites.")
+        return
+
+    matches = inputs['molecules'][product]['mol'].GetSubstructMatches(Chem.MolFromSmarts(reaction_info['prod_template'][i]))
+    all_matches = [[] for _ in range(len(reaction_info['prod_idx']))]
 
     for match in matches:
-        all_matches.append(match[react_idx_A])
-    print("Matches for primary amine nitrogens in " + mon_names[0] + ":", all_matches)
+        for j, idx in enumerate(reaction_info['prod_idx']):
+            all_matches[j].append(match[idx])
 
-    mon_A_react = all_matches[0]+1  # first match corresponds to monomer A
+        print("Product groups in " + product + ":", all_matches)
+        prod_idxs = [all_matches[j][0]+1 for j in range(len(all_matches))]
 
+    inputs['reactions'][reaction]['reactant_indices'] = react_idxs
+    inputs['reactions'][reaction]['product_indices'] = prod_idxs
+    
+    return
 
-    matches = mon_B.GetSubstructMatches(Chem.MolFromSmarts(react_template_B))
-    all_matches = []
+def map_product_atoms_to_reactants(inputs, reaction):
 
-    for i, match in enumerate(matches):
-        all_matches.append(match[react_idx_B])
-    print("Matches for acid chloride carbons in " + mon_names[1] + ":", all_matches)
-    mon_B_react = all_matches[0]+1  # first match corresponds to monomer B
+    reaction_info = inputs['reactions'][reaction]
+    mapped_indices = [[] for _ in range(len(reaction_info['reactants']))]
 
-    # find N bonded to C=O in dimer
-    matches = dim.GetSubstructMatches(Chem.MolFromSmarts(prod_template))
-    all_matches_A = []
-    all_matches_B = []
-
-    for i, match in enumerate(matches):
-        all_matches_A.append(match[prod_idx_A])
-        all_matches_B.append(match[prod_idx_B])
-
-    print("Matches for amide nitrogens in DIM:", all_matches_A)
-    print("Matches for carbonyl carbons in DIM:", all_matches_B)
-    mon_A_prod = all_matches_A[0]+1  # first match corresponds to monomer A
-    mon_B_prod = all_matches_B[0]+1  # first match corresponds to monomer B
-
-    return mon_A_react, mon_B_react, mon_A_prod, mon_B_prod
-
-def map_dimer_atoms_to_monomers(dim_prim, mon_A_prod, mon_B_prod):
-    mon_A_indices = []
-    mon_B_indices = []
-
-    nodelist = list(dim_prim.topology.nodes)
+    # note: assumes that the first product is the "main" product
+    topology = inputs['molecules'][reaction_info['products'][0]]['prim'].topology
+    nodelist = list(topology.nodes)
     for atom in nodelist:
-        path_A = nx.shortest_path(dim_prim.topology, source=atom, target=nodelist[mon_A_prod-1])
-        path_B = nx.shortest_path(dim_prim.topology, source=atom, target=nodelist[mon_B_prod-1])
-        if len(path_A) < len(path_B):
-            mon_A_indices.append(atom[1]+1)
-        else:
-            mon_B_indices.append(atom[1]+1) 
+        paths = []
+        for i, reactant in enumerate(reaction_info['reactants']):
+            path = nx.shortest_path(topology, source=atom, target=nodelist[reaction_info['product_indices'][i]-1])
+            paths.append(path)
+        
+        mapped_indices[np.argmin([len(path) for path in paths])].append(atom[1]+1)
 
-    print("Monomer A atom indices in dimer:", mon_A_indices)
-    print("Monomer B atom indices in dimer:", mon_B_indices)
-
-    return mon_A_indices, mon_B_indices
+    for i, reactant in enumerate(reaction_info['reactants']):
+        print(f"Reactant {reactant} atom indices in product:", mapped_indices[i])
+    
+    inputs['reactions'][reaction]['mapped_indices'] = mapped_indices
 
 def openff_atom_typing(mon_names, mon_A_smi, mon_B_smi, dim_smi):
     from openff.toolkit import ForceField, Molecule, Topology
