@@ -52,7 +52,7 @@ def react_molecules_to_product(inputs, reaction, ex_h_template=False):
             inputs['molecules'][product] = {}
         else:
             print(f"Warning: Product {product} already in molecules. Overwriting with new product information.")
-        prod_smi = Chem.MolToSmiles(products[i][0])
+        prod_smi = Chem.MolToSmiles(products[0][i])
         prod_prim = primitive_from_smiles(prod_smi, ensure_explicit_Hs=True, embed_positions=True)
         prod_mol = primitive_to_rdkit(prod_prim)
         inputs['molecules'][product]['smi'] = prod_smi
@@ -84,7 +84,7 @@ def identify_reactive_sites(inputs, reaction): #mon_A, mon_B, dim, react_templat
         print(f"Error: Product {product} does not have an RDKit molecule defined. Please ensure that the product has been processed to generate the RDKit molecule before identifying reactive sites.")
         return
 
-    matches = inputs['molecules'][product]['mol'].GetSubstructMatches(Chem.MolFromSmarts(reaction_info['prod_template'][i]))
+    matches = inputs['molecules'][product]['mol'].GetSubstructMatches(Chem.MolFromSmarts(reaction_info['prod_template'][0]))
     all_matches = [[] for _ in range(len(reaction_info['prod_idx']))]
 
     for match in matches:
