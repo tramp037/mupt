@@ -48,23 +48,35 @@ class PrimitiveRole(Enum):
 
 
 def assign_SAAMR_roles(prim: 'Primitive') -> None:
-    """Assign canonical export roles for a SAAMR-compliant hierarchy.
+    """Assign canonical export roles for a strict depth-3 SAAMR hierarchy.
+
+    Walks the tree by depth (0/1/2/3) and assigns UNIVERSE, SEGMENT,
+    RESIDUE, and PARTICLE roles respectively.  Requires that the tree
+    satisfies :func:`~mupt.mupr.properties.has_strict_SAAMR_depth`.
 
     Parameters
     ----------
     prim : Primitive
         Root Primitive of a hierarchy expected to follow SAAMR layout:
-        universe -> segment -> residue -> particle.
+        universe -> segment -> residue -> particle (all leaves at depth 3).
 
     Raises
     ------
     ValueError
-        If ``prim`` is not SAAMR-compliant.
-    """
-    from .properties import is_SAAMR_compliant
+        If ``prim`` does not satisfy ``has_strict_SAAMR_depth``.
 
-    if not is_SAAMR_compliant(prim):
-        raise ValueError('Cannot assign SAAMR roles: hierarchy is not SAAMR-compliant')
+    See Also
+    --------
+    has_SAAMR_roles : Checks that roles are already assigned.
+    has_strict_SAAMR_depth : The structural precondition for this function.
+    """
+    from .properties import has_strict_SAAMR_depth
+
+    if not has_strict_SAAMR_depth(prim):
+        raise ValueError(
+            'Cannot assign SAAMR roles: hierarchy does not have strict '
+            'SAAMR depth (all leaves must be atoms at depth 3)'
+        )
 
     prim.role = PrimitiveRole.UNIVERSE
 

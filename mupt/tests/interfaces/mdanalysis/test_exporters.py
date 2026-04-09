@@ -202,15 +202,16 @@ def test_mda_export_reject_empty_tree():
 
     Under anytree, a childless node is its own leaf, so ``prim.leaves``
     returns ``[prim]`` (never empty).  The ``all()`` predicate in
-    ``is_SAAMR_compliant`` correctly rejects this because the root has
-    ``depth=0`` (not 3) and ``is_atom=False``.  This test verifies both
-    the ``is_SAAMR_compliant`` result and the exporter's rejection.
+    ``has_strict_SAAMR_depth`` correctly rejects this because the root
+    has ``depth=0`` (not 3) and ``is_atom=False``.  This test verifies
+    both the ``has_strict_SAAMR_depth`` result and the exporter's
+    rejection.
     """
-    from mupt.mupr.properties import is_SAAMR_compliant
+    from mupt.mupr.properties import has_strict_SAAMR_depth
 
     root_only = Primitive(label="empty")
-    assert not is_SAAMR_compliant(root_only), (
-        "Root-only Primitive should not be SAAMR-compliant"
+    assert not has_strict_SAAMR_depth(root_only), (
+        "Root-only Primitive should not have strict SAAMR depth"
     )
     with pytest.raises(ValueError, match="UNIVERSE"):
         primitive_to_mdanalysis(root_only, resname_map={})

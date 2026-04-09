@@ -9,20 +9,36 @@ __email__ = "jola3134@colorado.edu"
 from .primitives import Primitive
 
 
-def is_SAAMR_compliant(prim: Primitive) -> bool:
-   """
-   Check whether a Primitive hierarchy is a strict SAAMR tree:
-   exactly universe -> molecule -> repeat-unit -> atom (depth 3).
+def has_strict_SAAMR_depth(prim: Primitive) -> bool:
+    """Check whether a Primitive hierarchy is a strict depth-3 SAAMR tree.
 
-   SAAMR = Standard All-Atom Molecular Representation
+    A strict SAAMR tree has exactly four levels:
+    universe (depth 0) -> segment (depth 1) -> residue (depth 2)
+    -> particle (depth 3), with every leaf being an atom at depth 3.
 
-   This checks for *strict* SAAMR compliance (all leaves are atoms at
-   depth exactly 3).  Note that MDAnalysis export does **not** require
-   strict SAAMR compliance — any tree with the four canonical SAAMR
-   roles (UNIVERSE, SEGMENT, RESIDUE, PARTICLE) assigned can be exported,
-   regardless of depth.  Use :func:`~mupt.mupr.roles.assign_SAAMR_roles`
-   to tag a strict SAAMR tree, or assign roles manually for non-strict
-   hierarchies.
-   """
+    SAAMR = Standard All-Atom Molecular Representation
 
-   return all(leaf.is_atom and (leaf.depth == 3) for leaf in prim.leaves)
+    This is the structural precondition required by
+    :func:`~mupt.mupr.roles.assign_SAAMR_roles`, which walks the tree
+    by depth to assign roles.  MDAnalysis export itself does **not**
+    require strict depth-3 structure — any tree with the four SAAMR
+    roles assigned can be exported regardless of depth.  Use
+    :func:`~mupt.mupr.roles.has_SAAMR_roles` to check role presence
+    instead.
+
+    Parameters
+    ----------
+    prim : Primitive
+        Root of the hierarchy to check.
+
+    Returns
+    -------
+    bool
+        ``True`` if every leaf is an atom at depth exactly 3.
+
+    See Also
+    --------
+    has_SAAMR_roles : Checks that all four SAAMR roles are present (any depth).
+    assign_SAAMR_roles : Assigns roles to a strict SAAMR hierarchy.
+    """
+    return all(leaf.is_atom and (leaf.depth == 3) for leaf in prim.leaves)
