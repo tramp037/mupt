@@ -9,6 +9,7 @@ from collections.abc import Hashable
 from typing import Optional
 
 from anytree import PreOrderIter
+import numpy as np
 
 from ...chemistry.core import BOND_ORDER
 from ...mupr.embedding import ConnectorReference
@@ -163,6 +164,18 @@ class MDAExportStrategy(ABC):
 class AllAtomExportStrategy(MDAExportStrategy):
     """All-atom export strategy based on role-aware hierarchy traversal."""
 
+    def __init__(
+        self,
+        default_atom_position: Optional[np.ndarray] = None,
+    ) -> None:
+        if default_atom_position is None:
+            self.default_atom_position = np.array([0.0, 0.0, 0.0], dtype=float)
+        else:
+            default_atom_position = np.asarray(default_atom_position, dtype=float)
+            if default_atom_position.shape != (3,):
+                raise ValueError('default_atom_position must be a 3-dimensional vector')
+            self.default_atom_position = default_atom_position
+
     @property
     def label(self) -> str:
         """Human-readable strategy name."""
@@ -260,7 +273,7 @@ class AllAtomExportStrategy(MDAExportStrategy):
             if hasattr(atom, "shape") and atom.shape is not None:
                 data.atom_positions.append(list(atom.shape.centroid))
             else:
-                data.atom_positions.append([0.0, 0.0, 0.0])
+                data.atom_positions.append(list(self.default_atom_position))
 
         # Walk segment -> residue -> particle to build hierarchy mapping
         # Use PreOrderIter to find SEGMENT nodes at any depth (not just direct children)
