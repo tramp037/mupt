@@ -196,6 +196,7 @@ class AllAtomExportStrategy(MDAExportStrategy):
         if root.role != PrimitiveRole.UNIVERSE:
             raise ValueError(
                 "Root Primitive must have role=PrimitiveRole.UNIVERSE. "
+                "(Unassigned nodes default to PrimitiveRole.UNASSIGNED.) "
                 "Assign roles via assign_SAAMR_roles() or set them manually."
             )
 
