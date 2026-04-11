@@ -21,7 +21,7 @@ from ..geometry.transforms.rigid import rigid_vector_coalignment
 from ..interfaces.smiles import primitive_from_smiles
 from ..interfaces.rdkit import suppress_rdkit_logs
 from ..builders.random_walk import AngleConstrainedRandomWalk
-from ..mupr.roles import assign_SAAMR_roles
+from ..roles import assign_SAAMR_roles
 
 
 logger = logging.getLogger(__name__)
@@ -490,7 +490,7 @@ def depth4_helium_system() -> Primitive:
     - 0 bonds
     """
     from ..geometry.shapes import Sphere
-    from ..mupr.roles import PrimitiveRole
+    from ..roles import PrimitiveRole
     from periodictable import elements
 
     # Atoms
@@ -553,7 +553,7 @@ def depth4_bonded_system() -> Primitive:
     - 7 bonds (6 intra-residue + 1 inter-residue)
     """
     import networkx as nx
-    from ..mupr.roles import PrimitiveRole
+    from ..roles import PrimitiveRole
     from ..mupr.topology import TopologicalStructure
     from ..interfaces.rdkit import suppress_rdkit_logs
 

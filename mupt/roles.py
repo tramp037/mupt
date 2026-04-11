@@ -14,7 +14,7 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .primitives import Primitive
+    from .mupr.primitives import Primitive
 
 
 class PrimitiveRole(Enum):
@@ -104,7 +104,7 @@ def assign_SAAMR_roles(prim: 'Primitive') -> None:
     has_SAAMR_roles : Checks that roles are already assigned.
     has_strict_SAAMR_depth : The structural precondition for this function.
     """
-    from .properties import has_strict_SAAMR_depth
+    from .mupr.properties import has_strict_SAAMR_depth
 
     if not has_strict_SAAMR_depth(prim):
         raise ValueError(

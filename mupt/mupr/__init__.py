@@ -1,6 +1,4 @@
-'''MuPT Repr, MuPR for short, central representaitons of polymer systems'''
+'''MuPT Representation or MuPR for short, central representation of polymer systems'''
 
-__author__ = 'Timotej Bernat, Joseph R. Laforet Jr.'
-__email__ = 'timotej.bernat@colorado.edu, jola3134@colorado.edu'
-
-from .roles import PrimitiveRole, assign_SAAMR_roles, has_SAAMR_roles
+__author__ = 'Timotej Bernat'
+__email__ = 'timotej.bernat@colorado.edu'

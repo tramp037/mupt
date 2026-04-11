@@ -15,7 +15,7 @@ import pytest
 from mupt.interfaces.mdanalysis.exporters import primitive_to_mdanalysis
 from mupt.interfaces.mdanalysis.strategies import AllAtomExportStrategy
 from mupt.mupr.primitives import Primitive
-from mupt.mupr.roles import PrimitiveRole
+from mupt.roles import PrimitiveRole
 from mupt.chemistry import ELEMENTS
 
 
@@ -182,7 +182,7 @@ def non_SAAMR_hierarchy_non_atom_leaf() -> Primitive:
 def SAAMR_hierarchy_helium() -> Primitive:
     """Minimal valid SAAMR structure for testing resname_map validation.
     Hierarchy: Universe -> Molecule -> Repeat-Unit ('unit') -> He atom."""
-    from mupt.mupr.roles import assign_SAAMR_roles
+    from mupt.roles import assign_SAAMR_roles
 
     universe = Primitive(label="universe")
     molecule = Primitive(label="mol")

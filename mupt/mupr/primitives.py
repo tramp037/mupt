@@ -51,7 +51,7 @@ from .connection import (
     UnboundConnectorError,
 )
 from .topology import TopologicalStructure, GraphLayout
-from .roles import PrimitiveRole
+from ..roles import PrimitiveRole
 from .embedding import infer_connections_from_topology, ConnectorReference, flexible_connector_reference
 
 from ..mutils.containers import UniqueRegistry
