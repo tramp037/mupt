@@ -164,7 +164,7 @@ class MDAExportStrategy(ABC):
 class AllAtomExportStrategy(MDAExportStrategy):
     """All-atom export strategy based on role-aware hierarchy traversal.
 
-    Although only four canonical SAAMR roles are recognized (UNIVERSE,
+    Although only the four SAAMR roles are recognized (UNIVERSE,
     SEGMENT, RESIDUE, PARTICLE), this strategy supports trees of arbitrary
     depth. Intermediate nodes between role-tagged levels (e.g., a "domain"
     grouping between UNIVERSE and SEGMENT) are traversed transparently via
@@ -322,7 +322,7 @@ class AllAtomExportStrategy(MDAExportStrategy):
                 continue
 
             for conn_ref_pair in node.internal_connections:
-                # Canonicalize pair order for deterministic bond-order inference;
+                # sort pair order for standardized bond-order reference
                 # frozenset iteration order is arbitrary, so we sort by handles
                 ref_list = sorted(
                     conn_ref_pair,

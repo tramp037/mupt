@@ -1,9 +1,9 @@
 """
-Canonical roles that Primitives can play in an exportable hierarchy.
+Labeled roles that Primitives can play in an exportable hierarchy.
 
 These roles allow Primitives to be explicitly tagged with their semantic
 purpose within a molecular representation, enabling generic tree traversal
-for export to external toolkits (e.g., MDAnalysis, RDKit) without
+for export to external toolkits (e.g., MDAnalysis) without
 hard-coding assumptions about tree depth or structure.
 """
 
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 class PrimitiveRole(Enum):
-    """Canonical roles that Primitives can play in an exportable hierarchy.
+    """Labeled roles that Primitives can play in an exportable hierarchy.
     
     These roles map to the standard levels expected by molecular analysis
     toolkits such as MDAnalysis:
