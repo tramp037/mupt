@@ -1,8 +1,9 @@
 from mupt.reactions.polymerizeit import react_pi
-from mupt.reactions.polymerizeit import write_pi
+from mupt.reactions.polymerizeit import init_pi
 
 import yaml
 import argparse
+import copy
 
 def make_pi(inputs_file=None):
 
@@ -19,6 +20,10 @@ def make_pi(inputs_file=None):
     with open(inputs_file, 'r') as f:
         inputs = yaml.safe_load(f)
 
+    inputs['molecules'] = copy.deepcopy(inputs['monomers'])
+    inputs['repeat_units'] = []
+    inputs['byproducts'] = []
+
     for reaction in inputs['reactions']:
 
         # react the monomers to form the dimer and create primitives and RDKit molecules
@@ -29,6 +34,10 @@ def make_pi(inputs_file=None):
 
         # match the atom indices with monomer A or B
         react_pi.map_product_atoms_to_reactants(inputs, reaction)
+
+    for system in inputs['system_parameters']:
+
+        init_pi.generate_config_file(inputs, system)
 
 
     return inputs
