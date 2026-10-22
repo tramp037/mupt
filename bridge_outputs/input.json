@@ -1,0 +1,35 @@
+{
+  "simulation_name": "Polyamide_Count_Mode_Basic",
+  "force_field": "PCFF",
+  "simulations": [
+    {
+      "tag": "10k_300K",
+      "temperature": 300,
+      "density": 0.8,
+      "monomer_counts": {
+        "trimesoyl_chloride": 220,
+        "m_phenylenediamine": 330
+      }
+    },
+    {
+      "tag": "100k_400K",
+      "temperature": 400,
+      "density": 0.8,
+      "monomer_counts": {
+        "trimesoyl_chloride": 2200,
+        "m_phenylenediamine": 3300
+      }
+    }
+  ],
+  "monomers": [
+    {
+      "name": "trimesoyl_chloride",
+      "smiles": "O=C(Cl)c1cc(C(=O)Cl)cc(C(=O)Cl)c1"
+    },
+    {
+      "name": "m_phenylenediamine",
+      "smiles": "Nc1cccc(N)c1"
+    }
+  ],
+  "output_dir": "/mnt/c/Users/Janitha/Documents/mupt/MuPT_reactions_output/"
+}

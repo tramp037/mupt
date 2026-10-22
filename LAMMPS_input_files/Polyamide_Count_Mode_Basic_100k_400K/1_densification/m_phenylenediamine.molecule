@@ -1,0 +1,156 @@
+HEADER,  m_phenylenediamine.mol  read w/ mol2lmp > atom_typing v1.12 / 2 June 2026 w/PCFF atom-types > all2lmp: v1.22 / 14 April 2025  Class: 2 > bond_react_merge: v1.19 / 2 June 2026 molecule file (filetag: data2)
+
+16 atoms
+16 bonds
+24 angles
+32 dihedrals
+8 impropers
+
+Types
+
+ 1  nn    #  nn   
+ 2  cp    #  cp   
+ 3  cp    #  cp   
+ 4  cp    #  cp   
+ 5  cp    #  cp   
+ 6  cp    #  cp   
+ 7  nn    #  nn   
+ 8  cp    #  cp   
+ 9  hn2   #  hn2  
+10  hn2   #  hn2  
+11  hc    #  hc   
+12  hc    #  hc   
+13  hc    #  hc   
+14  hn2   #  hn2  
+15  hn2   #  hn2  
+16  hc    #  hc   
+
+Charges
+
+ 1   -0.082700 #  nn   
+ 2    0.082700 #  cp   
+ 3   -0.126800 #  cp   
+ 4   -0.126800 #  cp   
+ 5   -0.126800 #  cp   
+ 6    0.082700 #  cp   
+ 7   -0.082700 #  nn   
+ 8   -0.126800 #  cp   
+ 9    0.000000 #  hn2  
+10    0.000000 #  hn2  
+11    0.126800 #  hc   
+12    0.126800 #  hc   
+13    0.126800 #  hc   
+14    0.000000 #  hn2  
+15    0.000000 #  hn2  
+16    0.126800 #  hc   
+
+Coords
+
+ 1     0.394863        -1.788169       -1.873275    #  nn   
+ 2     -0.019338       -0.892169       -0.877975    #  cp   
+ 3     -1.343038       -0.452469       -0.835375    #  cp   
+ 4     -1.740238       0.502931        0.100425     #  cp   
+ 5     -0.799037       1.071531        0.959025     #  cp   
+ 6     0.551562        0.738331        0.847225     #  cp   
+ 7     1.481663        1.245831        1.765025     #  nn   
+ 8     0.923663        -0.266969       -0.053275    #  cp   
+ 9     -0.340738       -2.412969       -2.187775    #  hn2  
+10     1.247662        -2.286669       -1.638975    #  hn2  
+11     -2.081138       -0.866169       -1.516675    #  hc   
+12     -2.782338       0.804131        0.160625     #  hc   
+13     -1.126837       1.793331        1.701825     #  hc   
+14     2.438462        1.221331        1.426225     #  hn2  
+15     1.229362        2.156231        2.136425     #  hn2  
+16     1.965462        -0.568069       -0.113475    #  hc   
+
+Bonds
+
+1  cp-nn      2  1  #  cp        nn   
+2  hn2-nn     9  1  #  hn2       nn   
+3  hn2-nn     10 1  #  hn2       nn   
+4  cp-cp      2  3  #  cp        cp   
+5  cp-cp      2  8  #  cp        cp   
+6  cp-cp      3  4  #  cp        cp   
+7  cp-hc      3  11 #  cp        hc   
+8  cp-cp      4  5  #  cp        cp   
+9  cp-hc      4  12 #  cp        hc   
+10 cp-cp      5  6  #  cp        cp   
+11 cp-hc      5  13 #  cp        hc   
+12 cp-nn      6  7  #  cp        nn   
+13 cp-cp      6  8  #  cp        cp   
+14 hn2-nn     14 7  #  hn2       nn   
+15 hn2-nn     15 7  #  hn2       nn   
+16 cp-hc      8  16 #  cp        hc   
+
+Angles
+
+1  hn2-nn-hn2      9  1  10 #  hn2      nn      hn2   
+2  cp-nn-hn2       2  1  9  #  cp       nn      hn2   
+3  cp-nn-hn2       2  1  10 #  cp       nn      hn2   
+4  cp-cp-nn        8  2  1  #  cp       cp       nn   
+5  cp-cp-nn        3  2  1  #  cp       cp       nn   
+6  cp-cp-cp        3  2  8  #  cp       cp       cp   
+7  cp-cp-hc        4  3  11 #  cp       cp       hc   
+8  cp-cp-hc        2  3  11 #  cp       cp       hc   
+9  cp-cp-cp        2  3  4  #  cp       cp       cp   
+10 cp-cp-hc        3  4  12 #  cp       cp       hc   
+11 cp-cp-hc        5  4  12 #  cp       cp       hc   
+12 cp-cp-cp        3  4  5  #  cp       cp       cp   
+13 cp-cp-cp        4  5  6  #  cp       cp       cp   
+14 cp-cp-hc        6  5  13 #  cp       cp       hc   
+15 cp-cp-hc        4  5  13 #  cp       cp       hc   
+16 cp-cp-cp        5  6  8  #  cp       cp       cp   
+17 cp-cp-nn        5  6  7  #  cp       cp       nn   
+18 cp-cp-nn        8  6  7  #  cp       cp       nn   
+19 cp-nn-hn2       6  7  15 #  cp       nn      hn2   
+20 cp-nn-hn2       6  7  14 #  cp       nn      hn2   
+21 hn2-nn-hn2      14 7  15 #  hn2      nn      hn2   
+22 cp-cp-cp        2  8  6  #  cp       cp       cp   
+23 cp-cp-hc        6  8  16 #  cp       cp       hc   
+24 cp-cp-hc        2  8  16 #  cp       cp       hc   
+
+Dihedrals
+
+1  cp-cp-nn-hn2         3  2  1  9  #  cp       cp      nn      hn2   
+2  cp-cp-cp-nn          4  3  2  1  #  cp       cp      cp       nn   
+3  cp-cp-nn-hn2         8  2  1  10 #  cp       cp      nn      hn2   
+4  cp-cp-cp-nn          6  8  2  1  #  cp       cp      cp       nn   
+5  cp-cp-nn-hn2         8  2  1  9  #  cp       cp      nn      hn2   
+6  cp-cp-cp-hc          3  2  8  16 #  cp       cp      cp       hc   
+7  cp-cp-nn-hn2         3  2  1  10 #  cp       cp      nn      hn2   
+8  hc-cp-cp-nn          11 3  2  1  #  hc       cp      cp       nn   
+9  cp-cp-cp-hc          8  2  3  11 #  cp       cp      cp       hc   
+10 hc-cp-cp-nn          16 8  2  1  #  hc       cp      cp       nn   
+11 cp-cp-cp-cp          3  2  8  6  #  cp       cp      cp       cp   
+12 cp-cp-cp-hc          2  3  4  12 #  cp       cp      cp       hc   
+13 hc-cp-cp-hc          11 3  4  12 #  hc       cp      cp       hc   
+14 cp-cp-cp-cp          2  3  4  5  #  cp       cp      cp       cp   
+15 cp-cp-cp-cp          4  3  2  8  #  cp       cp      cp       cp   
+16 cp-cp-cp-hc          3  4  5  13 #  cp       cp      cp       hc   
+17 hc-cp-cp-hc          12 4  5  13 #  hc       cp      cp       hc   
+18 cp-cp-cp-cp          3  4  5  6  #  cp       cp      cp       cp   
+19 cp-cp-cp-hc          5  4  3  11 #  cp       cp      cp       hc   
+20 cp-cp-cp-hc          6  5  4  12 #  cp       cp      cp       hc   
+21 cp-cp-cp-cp          4  5  6  8  #  cp       cp      cp       cp   
+22 cp-cp-cp-nn          4  5  6  7  #  cp       cp      cp       nn   
+23 hc-cp-cp-nn          13 5  6  7  #  hc       cp      cp       nn   
+24 cp-cp-nn-hn2         5  6  7  14 #  cp       cp      nn      hn2   
+25 cp-cp-nn-hn2         8  6  7  15 #  cp       cp      nn      hn2   
+26 cp-cp-nn-hn2         8  6  7  14 #  cp       cp      nn      hn2   
+27 hc-cp-cp-nn          16 8  6  7  #  hc       cp      cp       nn   
+28 cp-cp-cp-hc          5  6  8  16 #  cp       cp      cp       hc   
+29 cp-cp-nn-hn2         5  6  7  15 #  cp       cp      nn      hn2   
+30 cp-cp-cp-hc          8  6  5  13 #  cp       cp      cp       hc   
+31 cp-cp-cp-nn          2  8  6  7  #  cp       cp      cp       nn   
+32 cp-cp-cp-cp          2  8  6  5  #  cp       cp      cp       cp   
+
+Impropers
+
+1  cp-nn-hn2-hn2-nb==3       2  1  9  10 #  cp       nn     hn2     hn2    nb==3   
+2  cp-cp-cp-nn-nb==3         3  2  8  1  #  cp       cp      cp      nn    nb==3   
+3  cp-cp-cp-hc-nb==3         2  3  4  11 #  cp       cp      cp      hc    nb==3   
+4  cp-cp-cp-hc-nb==3         3  4  5  12 #  cp       cp      cp      hc    nb==3   
+5  cp-cp-cp-hc-nb==3         4  5  6  13 #  cp       cp      cp      hc    nb==3   
+6  cp-cp-cp-nn-nb==3         5  6  8  7  #  cp       cp      cp      nn    nb==3   
+7  cp-nn-hn2-hn2-nb==3       6  7  14 15 #  cp       nn     hn2     hn2    nb==3   
+8  cp-cp-cp-hc-nb==3         2  8  6  16 #  cp       cp      cp      hc    nb==3   

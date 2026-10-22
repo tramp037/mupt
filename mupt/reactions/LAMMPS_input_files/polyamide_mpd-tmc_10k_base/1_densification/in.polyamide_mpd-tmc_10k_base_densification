@@ -1,0 +1,77 @@
+# polyamide_mpd-tmc_10k_base Densification Script - Generated 2026-09-28 by AutoREACTER
+
+#------------Initialization------------
+units            real
+dimension        3
+boundary         p p p
+newton           on
+
+#------------Force Field------------
+atom_style       full
+bond_style       class2
+angle_style      class2
+dihedral_style   class2
+improper_style   class2
+special_bonds    lj/coul 0 0 1
+
+pair_style       lj/class2/coul/long 12.0
+kspace_style     pppm 1.0e-4
+pair_modify      mix sixthpower
+
+neighbor         2.0 bin
+neigh_modify     delay 0 every 1 check yes one 5000 page 100000
+
+#------------Read Initial Box and Force Field------------
+read_data        empty_box.data &
+                 extra/atom/types 10 &
+                 extra/bond/types 12 &
+                 extra/angle/types 16 &
+                 extra/dihedral/types 20 &
+                 extra/improper/types 8 &
+                 extra/bond/per/atom 50 &
+                 extra/angle/per/atom 50 &
+                 extra/dihedral/per/atom 50 &
+                 extra/improper/per/atom 50 &
+                 extra/special/per/atom 50
+
+read_data        force_field.data add append &
+                 extra/bond/per/atom 50 &
+                 extra/angle/per/atom 50 &
+                 extra/dihedral/per/atom 50 &
+                 extra/improper/per/atom 50 &
+                 extra/special/per/atom 50
+
+#------------Define Molecule Templates------------
+molecule         mol_1 MPD.molecule
+molecule         mol_2 TMC.molecule
+
+#------------Randomly Insert Molecules------------
+create_atoms     0 random 358 35478 NULL overlap 2.0 maxtry 100 mol mol_1 35478
+create_atoms     0 random 239 41258 NULL overlap 2.0 maxtry 100 mol mol_2 41258
+
+#------------Filled box write------------
+write_data       polyamide_mpd-tmc_10k_base_filled_box.data
+
+minimize         0.0 1.0e-8 1000 100000
+reset_timestep   0
+velocity         all create 300.0 73444 dist gaussian
+timestep         0.01
+thermo_style     custom step temp pe etotal press vol density
+
+#------------Densification Run------------
+dump             dump_1 all xyz 1000 polyamide_mpd-tmc_10k_base_shrink.xyz
+dump_modify      dump_1 types labels
+restart          100 polyamide_mpd-tmc_10k_base_shrink_backup1.restart polyamide_mpd-tmc_10k_base_shrink_backup2.restart
+fix              nvt_1 all nvt temp 300.0 300.0 100.0
+fix              fix_shrink all deform 1 x erate -0.001 y erate -0.001 z erate -0.001
+variable         my_den equal density
+fix              fix_halt all halt 1 v_my_den > 0.8 error continue
+thermo           1000
+run              50000
+
+#------------Cleanup------------
+unfix            nvt_1
+unfix            fix_shrink
+unfix            fix_halt
+undump           dump_1
+write_data       polyamide_mpd-tmc_10k_base_shrinked_box.data

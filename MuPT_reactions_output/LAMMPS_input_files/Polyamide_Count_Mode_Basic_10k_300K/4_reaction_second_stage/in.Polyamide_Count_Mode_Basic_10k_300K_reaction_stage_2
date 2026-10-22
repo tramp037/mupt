@@ -1,0 +1,61 @@
+# Polyamide_Count_Mode_Basic_10k_300K Second Reaction Stage Script - Generated 2026-09-23 16:20:07 by AutoREACTER
+
+#------------Initialization------------
+units            real
+dimension        3
+boundary         p p p
+atom_style       full
+
+# ------------Force Field Styles------------
+angle_style      class2
+bond_style       class2
+dihedral_style   class2
+improper_style   class2
+
+pair_style       lj/class2/coul/long 12.0
+kspace_style     pppm 1.0e-4
+pair_modify      mix sixthpower
+neighbor         2.0 bin
+neigh_modify     delay 0 every 1 check yes one 5000 page 100000
+
+#------------Read First Stage Reacted Box------------
+read_data        Polyamide_Count_Mode_Basic_10k_300K_reacted_0M-1M_3.5A.data &
+                 extra/bond/per/atom 50 &
+                 extra/angle/per/atom 50 &
+                 extra/dihedral/per/atom 50 &
+                 extra/improper/per/atom 50 &
+                 extra/special/per/atom 50
+
+#------------Minimization and Velocity------------
+minimize         1.0e-4 1.0e-6 1000 10000
+velocity         all create 300.0 6270093 dist gaussian
+timestep         1.0
+thermo           100
+reset_timestep   1000000
+
+#------------Define Reaction Templates------------
+molecule         mol_pre_1        template_pre_1.molecule
+molecule         mol_post_1       template_post_1.molecule
+
+
+fix              rxns all bond/react stabilization yes statted_grp 0.03 &
+                 react rxn_stp_1       all 1 0.0 5.0 mol_pre_1      mol_post_1      RXN_1.map       stabilize_steps 200 rescale_charges yes
+
+
+# Note: If atoms are being deleted during the reaction, ensure you use the correct Map file
+#       (e.g., RXN_i_with_delete_ids.map).
+#       NPT is recommended for deletion to account for density changes.
+
+fix              1 statted_grp_REACT nvt temp 300.0 300.0 100.0
+
+#fix              1 statted_grp_REACT npt temp 300.0 300.0 100.0 iso 0.0 0.0 1000.0
+
+#------------Output and Run------------
+thermo_style     custom step time temp f_rxns[1] press density vol pe ke etotal
+dump             traj all xyz 1000 Polyamide_Count_Mode_Basic_10k_300K_reacted_1M-3.5_5.0A.xyz
+dump_modify      traj types labels
+
+run              2500000
+restart          100 Polyamide_Count_Mode_Basic_10k_300K_reacted_1M-3.5_5.0A_backup1.restart Polyamide_Count_Mode_Basic_10k_300K_reacted_1M-3.5_5.0A_backup2.restart
+write_restart    Polyamide_Count_Mode_Basic_10k_300K_reacted_1M-3.5_5.0A.restart
+write_data       Polyamide_Count_Mode_Basic_10k_300K_reacted_1M-3.5_5.0A.data nofix

@@ -1,0 +1,37 @@
+{
+    "output_dir": "/mnt/c/Users/Janitha/Documents/mupt/mupt/reactions",
+    "simulation_name": "polyamide_mpd-tmc",
+    "force_field": "PCFF",
+    "simulations": [
+        {
+            "tag": "10k_base",
+            "temperature": 300.0,
+            "density": 0.8,
+            "total_atoms": 10000,
+            "monomer_ratios": {
+                "MPD": 3.0,
+                "TMC": 2.0
+            }
+        },
+        {
+            "tag": "100k_base",
+            "temperature": 300.0,
+            "density": 0.8,
+            "total_atoms": 100000,
+            "monomer_ratios": {
+                "MPD": 3.0,
+                "TMC": 2.0
+            }
+        }
+    ],
+    "monomers": [
+        {
+            "name": "MPD",
+            "smiles": "c1ccc(N)cc1N"
+        },
+        {
+            "name": "TMC",
+            "smiles": "c1c(C(=O)Cl)cc(C(=O)Cl)cc1C(=O)Cl"
+        }
+    ]
+}

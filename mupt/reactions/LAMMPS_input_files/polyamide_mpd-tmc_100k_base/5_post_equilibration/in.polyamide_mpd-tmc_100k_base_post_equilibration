@@ -1,0 +1,48 @@
+#polyamide_mpd-tmc_100k_base Post-Equilibration Script - Generated 2026-09-28 by AutoREACTER
+
+units            real
+dimension        3
+boundary         p p p
+atom_style       full
+
+angle_style      class2
+bond_style       class2
+dihedral_style   class2
+improper_style   class2
+
+pair_style       lj/class2/coul/long 12.0
+kspace_style     pppm 1.0e-4
+pair_modify      mix sixthpower
+neighbor         2.0 bin
+neigh_modify     delay 0 every 1 check yes one 5000 page 100000
+
+read_data        polyamide_mpd-tmc_100k_base_reacted_1M-3.5_5.0A.data &
+                 extra/bond/per/atom 50 &
+                 extra/angle/per/atom 50 &
+                 extra/dihedral/per/atom 50 &
+                 extra/improper/per/atom 50 &
+                 extra/special/per/atom 50
+
+minimize         0.0 1.0e-8 1000 100000
+reset_timestep   0
+timestep         1
+thermo           1000
+thermo_style     custom step time temp press density vol pe ke etotal
+dump             dump_1 all xyz 100 polyamide_mpd-tmc_100k_base_post_equilibration.xyz
+dump_modify      dump_1 types labels
+restart          100 polyamide_mpd-tmc_100k_base_post_equilibration_backup1.restart polyamide_mpd-tmc_100k_base_post_equilibration_backup2.restart
+
+fix              nvt_1 all nvt temp 300.0 300.0 100.0
+run              100000
+unfix            nvt_1
+
+fix              npt_2 all npt temp 300.0 300.0 100.0 iso 0.0 0.0 1000.0
+run              100000
+unfix            npt_2
+
+fix              nvt_3 all nvt temp 300.0 300.0 100.0
+run              100000
+unfix            nvt_3
+
+undump           dump_1
+write_data       polyamide_mpd-tmc_100k_base_post_equilibrated.data

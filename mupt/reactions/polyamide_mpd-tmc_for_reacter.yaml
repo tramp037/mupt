@@ -1,0 +1,59 @@
+dirname: polyamide_mpd-tmc
+
+# Define SMILES strings for the monomers
+monomers:
+    - name: MPD
+      smiles: 'c1ccc(N)cc1N'
+    - name: TMC
+      smiles: 'c1c(C(=O)Cl)cc(C(=O)Cl)cc1C(=O)Cl'
+
+# Define the pieces of the reaction template
+reactions:
+    polyamide:
+        reactants: 
+            - MPD
+            - TMC
+        react_template:
+            - '[N:1]'
+            - '[C:2](=[O:3])[Cl:4]'
+        react_idx:
+            - 0
+            - 0
+        products:
+            - DIM
+            - HCL
+        prod_template:
+            - '[N:1][C:2]=[O:3]'
+            - '[Cl:4]'
+        prod_idx:
+            - 0
+            - 1
+
+reaction_engine: 
+    name: reacter
+    
+    inputs:
+        num_iterations: 10
+        protocol: default
+        force_field: PCFF
+        simulation_engine: gromacs
+        ff_tool: ambertools
+        distance_cutoff: 0.5
+
+system_parameters:
+    - tag: 10k_base
+      temperature: 300
+      density: 0.8
+      total_atoms: 10000
+      monomer_ratios:
+          MPD: 3.0
+          TMC: 2.0
+    - tag: 100k_base
+      temperature: 300
+      density: 0.8
+      total_atoms: 100000
+      monomer_ratios:
+          MPD: 3.0
+          TMC: 2.0
+
+

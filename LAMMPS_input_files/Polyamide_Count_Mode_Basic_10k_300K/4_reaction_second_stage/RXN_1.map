@@ -1,0 +1,44 @@
+# This nominal superimpose file for the PCFF forcefield was generated on 2026-09-23 16:16:19 for RXN_1.map by AutoREACTER.
+
+8 edgeIDs
+20 equivalences
+
+
+InitiatorIDs
+
+1
+12
+
+EdgeIDs
+
+4
+5
+9
+10
+16
+17
+19
+20
+
+Equivalences
+
+1     1
+2     4
+3     6
+4     8
+5     10
+6     7
+7     20
+8     5
+9     9
+10    11
+11    3
+12    2
+13    19
+14    12
+15    13
+16    15
+17    17
+18    14
+19    16
+20    18
